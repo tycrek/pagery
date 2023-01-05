@@ -18,7 +18,9 @@
 		"release": "np",
 		"test": "npm run build && node ./dist/pagery.js --dir=test --pugFile=views/test.pug"
 	},
-	"bin": "dist/pagery.js",
+	"bin": {
+		"pagery": "dist/pagery.js"
+	},
 	"repository": "github:tycrek/pagery",
 	"keywords": [
 		"static",
