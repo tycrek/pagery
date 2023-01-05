@@ -13,17 +13,17 @@ const pkg: { name: string, version: string, homepage: string } = fs.readJsonSync
 const log = new Logger(`${pkg.name} v${pkg.version} |`);
 
 interface Options {
-	// Pug main file
-	pugFile: string;
+	// Pug views directory
+	views: string;
+
+	// Output directory
+	output: string;
 
 	// Tailwind CSS file
 	tailwindFile: string;
 
 	// Tailwind config file
 	tailwindConfigFile: string;
-
-	// Output HTML file
-	htmlFile: string;
 
 	// PostCSS plugins
 	postcssPlugins: string | string[];
@@ -33,17 +33,17 @@ interface Options {
 }
 
 const DEFAULT_OPTIONS: Options = {
-	// Pug main file
-	pugFile: 'views/main.pug',
+	// Pug views directory
+	views: 'views/',
+
+	// Output directory
+	output: 'html/',
 
 	// Tailwind CSS file
 	tailwindFile: 'tailwind.css',
 
 	// Tailwind config file
 	tailwindConfigFile: 'tailwind.config.js',
-
-	// Output HTML file
-	htmlFile: 'html/index.html',
 
 	// PostCSS plugins
 	postcssPlugins: [],
@@ -75,10 +75,21 @@ const css = (options: Options) => new Promise((resolve, reject) => {
 		.catch(reject);
 });
 
-const pugRender = (options: Options) => css(options).then((css) => pug.renderFile(options.pugFile, { css }));
-
-const staticGen = (options: Options) => Promise.all([pugRender(options), fs.ensureFile(options.htmlFile)])
-	.then(([html,]) => fs.writeFile(options.htmlFile, html));
+const generate = (options: Options) =>
+	css(options).then((css) =>
+		fs.readdir(options.views)
+			.then((files) => files.filter((file) => file.endsWith('.pug')))
+			.then((files) => files.map((file) => file.replace('.pug', '')))
+			.then((files) => Promise.all(files.map((file) => {
+				const pugFile = `${options.views}${file}.pug`;
+				const htmlFile = `${options.output}${file}.html`;
+				return fs.ensureFile(htmlFile)
+					.then(() => pug.renderFile(pugFile, { css }))
+					.then((html) => fs.writeFile(htmlFile, html))
+					.then(() => log.info(`Generated ${htmlFile}`))
+			})))
+			.then(() => log.success('Generated all files'))
+			.catch((err) => log.error(err)));
 
 // Check if being run on the command line
 if (require.main === module) {
@@ -86,10 +97,10 @@ if (require.main === module) {
 	/*
 	 * Parse command line arguments
 	 *
-	 * --pugFile=views/main.pug     # Pug main file
+	 * --views=views/               # Pug main file
+	 * --output=html/               # Output directory
 	 * --tailwindFile=tailwind.css  # Tailwind CSS file
 	 * --tailwindConfigFile=tailwind.config.js  # Tailwind config file
-	 * --htmlFile=html/index.html   # Output file
 	 * --dir=./                     # Run in this directory
 	 */
 	const args = process.argv.slice(2).reduce((acc, arg) => {
@@ -109,19 +120,19 @@ if (require.main === module) {
 		process.chdir(options.dir);
 
 	// Convert paths to absolute paths
-	options.pugFile = path(options.pugFile);
+	const fixSlashes = (str: string) => str.concat(str.includes('/') ? '/' : '\\').replaceAll('//', '/').replaceAll('\\\\', '\\');
+	options.views = fixSlashes(path(options.views));
+	options.output = fixSlashes(path(options.output));
 	options.tailwindFile = path(options.tailwindFile);
-	options.htmlFile = path(options.htmlFile);
 
 	// Split PostCSS plugins into an array
 	if (typeof options.postcssPlugins === 'string')
 		options.postcssPlugins = options.postcssPlugins.split(',');
 
 	// Check if files exist
-	Promise.all([fs.access(options.pugFile), fs.access(options.tailwindFile), fs.access(options.tailwindConfigFile)])
+	Promise.all([fs.access(`${options.views}index.pug`), fs.access(options.tailwindFile), fs.access(options.tailwindConfigFile), fs.ensureDir(options.output)])
 		.then(() => log.debug('Files exist'))
-		.then(() => staticGen(options))
-		.then(() => log.success(`Done, saved to ${CLI_COLOURS.turquoise}${options.htmlFile}`))
+		.then(() => generate(options))
 		.catch((err) => (console.log(err), log.error(err), process.exit(1)));
 } else {
 	log.error('Fuck off, module not implemented yet');

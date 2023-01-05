@@ -16,7 +16,7 @@
 	"scripts": {
 		"build": "rm -dr ./dist/ & tsc",
 		"release": "np",
-		"test": "npm run build && node ./dist/pagery.js --dir=test --pugFile=views/test.pug"
+		"test": "npm run build && node ./dist/pagery.js --dir=test"
 	},
 	"bin": {
 		"pagery": "dist/pagery.js"
