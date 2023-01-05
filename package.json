@@ -1,0 +1,45 @@
+{
+	"name": "pagery",
+	"version": "0.0.0",
+	"description": "Static site generator",
+	"main": "dist/pagery.js",
+	"engines": {
+		"node": ">=16.14.x",
+		"npm": ">=8.17.x"
+	},
+	"scripts": {
+		"build": "rm -dr ./dist/ & tsc",
+		"release": "np",
+		"test": "npm run build && node ./dist/pagery.js --dir=test --pugFile=views/test.pug"
+	},
+	"bin": "dist/pagery.js",
+	"repository": "github:tycrek/pagery",
+	"keywords": [
+		"static",
+		"site",
+		"generator"
+	],
+	"author": "tycrek <t@tycrek.com> (https://tycrek.com/)",
+	"license": "ISC",
+	"bugs": "https://github.com/tycrek/pagery/issues",
+	"homepage": "https://github.com/tycrek/pagery#readme",
+	"devDependencies": {
+		"@tsconfig/node16": "^1.0.3",
+		"@types/fs-extra": "^9.0.13",
+		"@types/node": "^18.11.18",
+		"@types/pug": "^2.0.6",
+		"typescript": "^4.9.4"
+	},
+	"dependencies": {
+		"autoprefixer": "^10.4.13",
+		"cssnano": "^5.1.14",
+		"fs-extra": "^11.1.0",
+		"postcss": "^8.4.20",
+		"postcss-font-magician": "^3.0.0",
+		"pug": "^3.0.2",
+		"tailwindcss": "^3.2.4"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}
