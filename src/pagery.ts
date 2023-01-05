@@ -5,7 +5,7 @@ import postcss from 'postcss';
 import pug from 'pug';
 import fs from 'fs-extra';
 import tailwindcss from 'tailwindcss';
-import { Logger, CLI_COLOURS } from './logger';
+import { Logger } from './logger';
 
 const path = (...args: string[]) => Path.join(process.cwd(), ...args);
 
@@ -30,6 +30,9 @@ interface Options {
 
 	// Directory to run in
 	dir?: string;
+
+	// Data files to pass to Pug. Can be a string or an array of strings of JSON files.
+	data?: string | string[];
 }
 
 const DEFAULT_OPTIONS: Options = {
@@ -69,27 +72,54 @@ const css = (options: Options) => new Promise((resolve, reject) => {
 		.then((bytes) => postcss(plugins).process(bytes, { from: options.tailwindFile, to: options.tailwindFile }))
 		.then((result) => {
 			if (result.warnings && result.warnings().length) throw new Error(result.warnings().join(', '));
+			log.debug('Compiled CSS');
 			return result.css;
 		})
 		.then(resolve)
 		.catch(reject);
 });
 
-const generate = (options: Options) =>
-	css(options).then((css) =>
-		fs.readdir(options.views)
-			.then((files) => files.filter((file) => file.endsWith('.pug')))
-			.then((files) => files.map((file) => file.replace('.pug', '')))
-			.then((files) => Promise.all(files.map((file) => {
-				const pugFile = `${options.views}${file}.pug`;
-				const htmlFile = `${options.output}${file}.html`;
-				return fs.ensureFile(htmlFile)
-					.then(() => pug.renderFile(pugFile, { css }))
-					.then((html) => fs.writeFile(htmlFile, html))
-					.then(() => log.info(`Generated ${htmlFile}`))
-			})))
-			.then(() => log.success('Generated all files'))
-			.catch((err) => log.error(err)));
+const generate = (options: Options) => {
+
+	let data: any = {};
+
+	// Load data files
+	let dataLoaders: Promise<void>[] = [];
+	if (options.data && options.data.constructor === Array) {
+		log.debug('Loading data files');
+		dataLoaders = options.data.map((file): Promise<void> => new Promise((resolve, reject) => {
+			const filename = file.split('/').pop()?.split('.').shift() || null;
+			return !filename
+				? resolve(void 0)
+				: fs.readJson(file)
+					.then((json) => data[filename] = json)
+					.then(resolve)
+					.catch(reject);
+		}));
+	}
+
+	// Load all the data files
+	Promise.all(dataLoaders)
+
+		// Compile the CSS
+		.then(() => css(options))
+		.then((css) =>
+
+			// Compile all the Pug files
+			fs.readdir(options.views)
+				.then((files) => files.filter((file) => file.endsWith('.pug')))
+				.then((files) => files.map((file) => file.replace('.pug', '')))
+				.then((files) => Promise.all(files.map((file) => {
+					const pugFile = `${options.views}${file}.pug`;
+					const htmlFile = `${options.output}${file}.html`;
+					return fs.ensureFile(htmlFile)
+						.then(() => pug.renderFile(pugFile, { css, data }))
+						.then((html) => fs.writeFile(htmlFile, html))
+						.then(() => log.info(`Generated ${htmlFile}`))
+				})))
+				.then(() => log.success('Generated all files'))
+				.catch((err) => log.error(err)))
+};
 
 // Check if being run on the command line
 if (require.main === module) {
@@ -102,6 +132,7 @@ if (require.main === module) {
 	 * --tailwindFile=tailwind.css  # Tailwind CSS file
 	 * --tailwindConfigFile=tailwind.config.js  # Tailwind config file
 	 * --dir=./                     # Run in this directory
+	 * --data=data.json             # Data file(s) to pass to Pug
 	 */
 	const args = process.argv.slice(2).reduce((acc, arg) => {
 		const [key, value] = arg.split('=');
@@ -128,6 +159,10 @@ if (require.main === module) {
 	// Split PostCSS plugins into an array
 	if (typeof options.postcssPlugins === 'string')
 		options.postcssPlugins = options.postcssPlugins.split(',');
+
+	// Convert data files to an array
+	if (typeof options.data === 'string')
+		options.data = options.data.split(',');
 
 	// Check if files exist
 	Promise.all([fs.access(`${options.views}index.pug`), fs.access(options.tailwindFile), fs.access(options.tailwindConfigFile), fs.ensureDir(options.output)])
