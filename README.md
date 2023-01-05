@@ -46,6 +46,19 @@ npm i -g pagery
 npm i pagery
 ```
 
+Global installation is recommened. If you install per project, I suggest including this script in your `package.json`:
+
+```json
+{
+    "scripts": {
+        "pagery": "node ./node_modules/pagery/dist/pagery.js"
+    },
+    // ...
+}
+```
+
+Then run it with `npm run pagery`.
+
 It is recommended to be using at least Node 16 and NPM 8.
 
 ## Project setup
