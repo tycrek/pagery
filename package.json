@@ -19,7 +19,7 @@
 		"test": "npm run build && node ./dist/pagery.js --dir=test --pugFile=views/test.pug"
 	},
 	"bin": {
-		"pagery": "dist/pagery.js"
+		"pagery": "node dist/pagery.js"
 	},
 	"repository": "github:tycrek/pagery",
 	"keywords": [
