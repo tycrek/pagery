@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import Path from 'path';
-import postcss, { AcceptedPlugin } from 'postcss';
+import postcss from 'postcss';
 import pug from 'pug';
 import fs from 'fs-extra';
 import tailwindcss from 'tailwindcss';
@@ -26,7 +26,7 @@ interface Options {
 	htmlFile: string;
 
 	// PostCSS plugins
-	postcssPlugins: string[];
+	postcssPlugins: string | string[];
 
 	// Directory to run in
 	dir?: string;
@@ -61,7 +61,8 @@ const css = (options: Options) => new Promise((resolve, reject) => {
 	];
 
 	// Load user-defined PostCSS plugins
-	options.postcssPlugins.forEach((plugin) => plugins.push(require(plugin)()));
+	if (typeof options.postcssPlugins !== 'string')
+		options.postcssPlugins.forEach((plugin) => plugins.push(require(plugin)()));
 
 	// Compile CSS
 	fs.readFile(options.tailwindFile)
@@ -111,6 +112,10 @@ if (require.main === module) {
 	options.pugFile = path(options.pugFile);
 	options.tailwindFile = path(options.tailwindFile);
 	options.htmlFile = path(options.htmlFile);
+
+	// Split PostCSS plugins into an array
+	if (typeof options.postcssPlugins === 'string')
+		options.postcssPlugins = options.postcssPlugins.split(',');
 
 	// Check if files exist
 	Promise.all([fs.access(options.pugFile), fs.access(options.tailwindFile), fs.access(options.tailwindConfigFile)])
