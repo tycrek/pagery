@@ -122,6 +122,34 @@ Some Tailwind classes use `/` for fractional values. This is also a problem in P
 button.bg-red-500.text-white.hover_bg-red-700(class='w-1/2' onclick='alert("Hello world!")') Click me!
 ```
 
+#### Using data
+
+You can pass data to your Pug files by using the `--data` option. You can pass multiple files by separating them with a comma. For example:
+
+```bash
+pagery --data=foo.json,bar.json
+```
+
+The data will be available in the Pug files as the `data` variable. The data object is in the format of `data.[filename].[key]`. For example, if you have a `foo.json` file with the following contents:
+
+```json
+{
+    "bar": "baz"
+}
+```
+
+You can access it in your Pug files like this:
+
+```pug
+p= data.foo.bar
+```
+
+Your HTML would render as:
+
+```html
+<p>baz</p>
+```
+
 ### Step 3: Run pagery
 
 Once the project is setup, you can run pagery with the following command:
@@ -141,6 +169,7 @@ This will compile your Pug files into HTML in the `html/` directory.
 | `--tailwindFile` | Path to your Tailwind CSS file | `tailwind.css` |
 | `--tailwindConfigFile` | Path to your Tailwind config file | `tailwind.config.js` |
 | `--dir` | Directory to run pagery in | `./` |
+| `--data` | Path to JSON file(s) containing data to pass to Pug files | `null` |
 
 **Example:**
 
