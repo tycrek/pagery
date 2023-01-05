@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import Path from 'path';
 import postcss, { AcceptedPlugin } from 'postcss';
 import pug from 'pug';
