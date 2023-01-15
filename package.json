@@ -17,7 +17,8 @@
 		"build": "rm -dr ./dist/ & tsc",
 		"release": "np",
 		"test:cli": "npm run build && node ./dist/pagery.js --dir=test --data=meta.json,foo.json",
-		"test:module": "npm run build && node test/test.js"
+		"test:module": "npm run build && node test/test.js",
+		"test": "npm run test:cli && npm run test:module"
 	},
 	"bin": {
 		"pagery": "dist/pagery.js"
