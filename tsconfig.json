@@ -7,7 +7,9 @@
 			"ES2022"
 		],
 		"downlevelIteration": true,
-		"esModuleInterop": true
+		"esModuleInterop": true,
+		"declaration": true,
+		"declarationDir": "./dist",
 	},
 	"include": [
 		"src/**/*.ts"

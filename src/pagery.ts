@@ -53,7 +53,7 @@ const DEFAULT_OPTIONS: Options = {
 };
 
 // Compile CSS
-const css = (options: Options) => new Promise((resolve, reject) => {
+export const css = (options: Options) => new Promise((resolve, reject) => {
 
 	// Load PostCSS plugins
 	const plugins = [
@@ -65,7 +65,7 @@ const css = (options: Options) => new Promise((resolve, reject) => {
 
 	// Load user-defined PostCSS plugins
 	if (typeof options.postcssPlugins !== 'string')
-		options.postcssPlugins.forEach((plugin) => plugins.push(require(plugin)()));
+		options.postcssPlugins?.forEach((plugin) => plugins.push(require(plugin)()));
 
 	// Compile CSS
 	fs.readFile(options.tailwindFile)
@@ -79,7 +79,18 @@ const css = (options: Options) => new Promise((resolve, reject) => {
 		.catch(reject);
 });
 
-const generate = (options: Options) => {
+export const generate = (options: Options) => {
+	const isModule = require.main !== module;
+
+	// if module, don't write the html, but return the html
+	const html: { [key: string]: string } = {};
+	if (isModule)
+		log.debug(`Generating HTML: ${isModule ? 'as module' : 'as CLI'}`);
+
+	if (isModule && options.dir) {
+		log.debug(`Changing directory to ${options.dir}`);
+		process.chdir(options.dir);
+	}
 
 	let data: any = {};
 
@@ -88,7 +99,7 @@ const generate = (options: Options) => {
 	if (options.data && options.data.constructor === Array) {
 		log.debug('Loading data files');
 		dataLoaders = options.data.map((file): Promise<void> => new Promise((resolve, reject) => {
-			const filename = file.split('/').pop()?.split('.').shift() || null;
+			const filename = file.replace('\\\\', '/').split('/').pop()?.split('.').shift() || null;
 			return !filename
 				? resolve(void 0)
 				: fs.readJson(file)
@@ -99,7 +110,7 @@ const generate = (options: Options) => {
 	}
 
 	// Load all the data files
-	Promise.all(dataLoaders)
+	return Promise.all(dataLoaders)
 
 		// Compile the CSS
 		.then(() => css(options))
@@ -109,15 +120,19 @@ const generate = (options: Options) => {
 			fs.readdir(options.views)
 				.then((files) => files.filter((file) => file.endsWith('.pug')))
 				.then((files) => files.map((file) => file.replace('.pug', '')))
-				.then((files) => Promise.all(files.map((file) => {
-					const pugFile = `${options.views}${file}.pug`;
-					const htmlFile = `${options.output}${file}.html`;
-					return fs.ensureFile(htmlFile)
-						.then(() => pug.renderFile(pugFile, { css, data }))
-						.then((html) => fs.writeFile(htmlFile, html))
-						.then(() => log.info(`Generated ${htmlFile}`))
+				.then((files) => Promise.all(files.map((filename) => {
+					const pugFile = `${options.views}${filename}.pug`;
+					const htmlFile = `${options.output}${filename}.html`;
+					const rendered = pug.renderFile(pugFile, { css, data });
+
+					return isModule
+						? (html[filename] = rendered, Promise.resolve())
+						: fs.ensureFile(htmlFile)
+							.then(() => fs.writeFile(htmlFile, rendered))
+							.then(() => log.info(`Generated ${htmlFile}`));
 				})))
-				.then(() => log.success('Generated all files'))
+				.then(() => log.success('Rendered all Pug files'))
+				.then(() => isModule ? html : void 0)
 				.catch((err) => log.error(err)))
 };
 
@@ -169,7 +184,4 @@ if (require.main === module) {
 		.then(() => log.debug('Files exist'))
 		.then(() => generate(options))
 		.catch((err) => (console.log(err), log.error(err), process.exit(1)));
-} else {
-	log.error('Fuck off, module not implemented yet');
-	process.exit(1);
 }
