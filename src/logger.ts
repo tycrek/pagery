@@ -34,6 +34,7 @@ export class Logger {
 
 	error(message: string) {
 		this.log(console.error, `${CLI_COLOURS.red}${message}`);
+		console.error(message);
 	}
 
 	warn(message: string) {
