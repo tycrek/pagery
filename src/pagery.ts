@@ -17,7 +17,7 @@ interface Options {
 	views: string;
 
 	// Output directory
-	output: string;
+	output?: string;
 
 	// Tailwind CSS file
 	tailwindFile: string;
