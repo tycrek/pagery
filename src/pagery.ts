@@ -168,7 +168,7 @@ if (require.main === module) {
 	// Convert paths to absolute paths
 	const fixSlashes = (str: string) => str.concat(str.includes('/') ? '/' : '\\').replaceAll('//', '/').replaceAll('\\\\', '\\');
 	options.views = fixSlashes(path(options.views));
-	options.output = fixSlashes(path(options.output));
+	options.output = fixSlashes(path(options.output!));
 	options.tailwindFile = path(options.tailwindFile);
 
 	// Split PostCSS plugins into an array
