@@ -60,7 +60,7 @@ const css = (options: Options) => new Promise((resolve, reject) => {
 		tailwindcss({ config: options.tailwindConfigFile }),
 		require('autoprefixer')(),
 		require('cssnano')(),
-		require('postcss-font-magician')({ protocol: 'https:' })
+		require('@tinycreek/postcss-font-magician')({ protocol: 'https:' })
 	];
 
 	// Load user-defined PostCSS plugins
