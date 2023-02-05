@@ -33,6 +33,9 @@ interface Options {
 
 	// Data files to pass to Pug. Can be a string or an array of strings of JSON files.
 	data?: string | string[];
+
+	// Files to exclude from rendering. Can be a string or an array of strings.
+	exclude?: string | string[];
 }
 
 const DEFAULT_OPTIONS: Options = {
@@ -110,12 +113,18 @@ const generate = (options: Options) => {
 				.then((files) => files.filter((file) => file.endsWith('.pug')))
 				.then((files) => files.map((file) => file.replace('.pug', '')))
 				.then((files) => Promise.all(files.map((file) => {
+
+					// Check if file is excluded
+					if (options.exclude && (options.exclude.toString() === file.concat('.pug') || Array.isArray(options.exclude) && options.exclude.find((exclude) => exclude === file.concat('.pug'))))
+						return Promise.resolve();
+
+					// Compile Pug file
 					const pugFile = `${options.views}${file}.pug`;
 					const htmlFile = `${options.output}${file}.html`;
 					return fs.ensureFile(htmlFile)
 						.then(() => pug.renderFile(pugFile, { css, data }))
 						.then((html) => fs.writeFile(htmlFile, html))
-						.then(() => log.info(`Generated ${htmlFile}`))
+						.then(() => log.info(`Generated ${htmlFile}`));
 				})))
 				.then(() => log.success('Generated all files'))
 				.catch((err) => log.error(err)))
@@ -133,6 +142,7 @@ if (require.main === module) {
 	 * --tailwindConfigFile=tailwind.config.js  # Tailwind config file
 	 * --dir=./                     # Run in this directory
 	 * --data=data.json             # Data file(s) to pass to Pug
+	 * --exclude=views/_head.pug    # File(s) to exclude from rendering
 	 */
 	const args = process.argv.slice(2).reduce((acc, arg) => {
 		const [key, value] = arg.split('=');
@@ -163,6 +173,10 @@ if (require.main === module) {
 	// Convert data files to an array
 	if (typeof options.data === 'string')
 		options.data = options.data.split(',');
+
+	// Convert exclude files to an array
+	if (typeof options.exclude === 'string')
+		options.exclude = options.exclude.split(',');
 
 	// Check if files exist
 	Promise.all([fs.access(`${options.views}index.pug`), fs.access(options.tailwindFile), fs.access(options.tailwindConfigFile), fs.ensureDir(options.output)])
