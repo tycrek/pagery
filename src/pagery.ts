@@ -25,7 +25,7 @@ interface Options {
 	// Tailwind config file
 	tailwindConfigFile: string;
 
-	// PostCSS plugins
+	// PostCSS plugins. Can be a string or an array of strings.
 	postcssPlugins: string | string[];
 
 	// Directory to run in
