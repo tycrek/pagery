@@ -65,7 +65,7 @@ It is recommended to be using at least Node 16 and NPM 8.
 
 ### Step 1: Setup Tailwind
 
-Create two new files, `tailwind.config.js` and `tailwind.css` in the root of your project. See [Tailwind CSS docs: Configuration](https://tailwindcss.com/docs/configuration) for `tailwind.config.js`
+Create two new files, `tailwind.config.js` and `tailwind.css` in the root of your project. See [Tailwind CSS docs: Configuration](https://tailwindcss.com/docs/configuration) for `tailwind.config.js`.
 
 Add the following to `tailwind.css`:
 
@@ -91,6 +91,20 @@ style
 ```
 
 This will include the compiled CSS in the `<style>` tag.
+
+#### Multiple CSS files
+
+See information below on passing multiple CSS files to Pagery. To use them in your Pug files, you would do the following:
+
+```pug
+style
+    != css.main
+
+//- or
+
+style
+    != css.admin
+```
 
 #### Using Tailwind classes
 
@@ -166,13 +180,16 @@ This will compile your Pug files into HTML in the `html/` directory.
 |--------|-------------|---------|
 | `--views` | Directory where your Pug files are located | `views/` |
 | `--output` | Directory where the compiled HTML files will be placed | `html/` |
-| `--tailwindFile` | Path to your Tailwind CSS file | `tailwind.css` |
+| `--tailwindFile` | Path to your Tailwind CSS file(s) | `tailwind.css` |
 | `--tailwindConfigFile` | Path to your Tailwind config file | `tailwind.config.js` |
 | `--dir` | Directory to run pagery in | `./` |
 | `--data` | Path to JSON file(s) containing data to pass to Pug files | `null` |
+| `--exclude` | Comma-separated list of Pug files to exclude from the output | `null` |
 
 **Example:**
 
 ```bash
 pagery --views=pug/ --output=public/ --dir=website/
+# or
+pagery --dir=public/ --data=language.json --tailwindFile=css/main.css,css/admin.css
 ```
