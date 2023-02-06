@@ -19,8 +19,8 @@ interface Options {
 	// Output directory
 	output: string;
 
-	// Tailwind CSS file
-	tailwindFile: string;
+	// Tailwind CSS file. Can be a string or an array of strings.
+	tailwindFile: string | string[];
 
 	// Tailwind config file
 	tailwindConfigFile: string;
@@ -56,7 +56,7 @@ const DEFAULT_OPTIONS: Options = {
 };
 
 // Compile CSS
-const css = (options: Options) => new Promise((resolve, reject) => {
+const css = (options: Options): Promise<string | { [key: string]: string }> => new Promise((resolve, reject) => {
 
 	// Load PostCSS plugins
 	const plugins = [
@@ -71,15 +71,29 @@ const css = (options: Options) => new Promise((resolve, reject) => {
 		options.postcssPlugins.forEach((plugin) => plugins.push(require(plugin)()));
 
 	// Compile CSS
-	fs.readFile(options.tailwindFile)
-		.then((bytes) => postcss(plugins).process(bytes, { from: options.tailwindFile, to: options.tailwindFile }))
-		.then((result) => {
-			if (result.warnings && result.warnings().length) throw new Error(result.warnings().join(', '));
-			log.debug('Compiled CSS');
-			return result.css;
-		})
-		.then(resolve)
-		.catch(reject);
+	const compileCss = (filepath: string, filename: string) =>
+		fs.readFile(filepath)
+			.then((bytes) => postcss(plugins).process(bytes, { from: filepath, to: filepath }))
+			.then((result) => {
+				if (result.warnings && result.warnings().length) throw new Error(result.warnings().join(', '));
+				log.debug(`Compiled ${filename}`);
+				return result.css;
+			});
+
+	// If array, we'll save to a map so the CSS can be accessed by filename
+	const css: { [key: string]: string } = {};
+	return Array.isArray(options.tailwindFile)
+		? Promise.all([
+			log.debug(`Compiling ${options.tailwindFile.length} Tailwind CSS files`),
+			...options.tailwindFile.map((file) => compileCss(path(file), file).then((data) => css[file.match(/^(.*)(?=\.)/g)![0]] = data))
+		])
+			.then(() => resolve(css))
+			.catch(reject)
+
+		// Otherwise, just compile the one file
+		: compileCss(path(options.tailwindFile), options.tailwindFile)
+			.then((data) => resolve(data))
+			.catch(reject);
 });
 
 const generate = (options: Options) => {
@@ -164,7 +178,10 @@ if (require.main === module) {
 	const fixSlashes = (str: string) => str.concat(str.includes('/') ? '/' : '\\').replaceAll('//', '/').replaceAll('\\\\', '\\');
 	options.views = fixSlashes(path(options.views));
 	options.output = fixSlashes(path(options.output));
-	options.tailwindFile = path(options.tailwindFile);
+
+	// Parse Tailwind CSS files
+	if (typeof options.tailwindFile === 'string')
+		options.tailwindFile = options.tailwindFile.split(',');
 
 	// Split PostCSS plugins into an array
 	if (typeof options.postcssPlugins === 'string')
@@ -179,7 +196,12 @@ if (require.main === module) {
 		options.exclude = options.exclude.split(',');
 
 	// Check if files exist
-	Promise.all([fs.access(`${options.views}index.pug`), fs.access(options.tailwindFile), fs.access(options.tailwindConfigFile), fs.ensureDir(options.output)])
+	Promise.all([
+		fs.access(`${options.views}index.pug`),
+		!Array.isArray(options.tailwindFile) ? fs.access(path(options.tailwindFile)) : Promise.all(options.tailwindFile.map((file) => fs.access(path(file)))),
+		fs.access(options.tailwindConfigFile),
+		fs.ensureDir(options.output)
+	])
 		.then(() => log.debug('Files exist'))
 		.then(() => generate(options))
 		.catch((err) => (console.log(err), log.error(err), process.exit(1)));
