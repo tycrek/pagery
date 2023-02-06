@@ -59,9 +59,9 @@ const css = (options: Options): Promise<string | { [key: string]: string }> => n
 
 	// Load user-defined PostCSS plugins
 	if (typeof options.postcssPlugins !== 'string')
-		options.postcssPlugins.forEach((plugin) => plugins.push(require(plugin)()));
+		options.postcssPlugins.forEach((plugin) => plugins.push(require(plugin)())); // todo: eventually somehow support plugin options
 
-	// Compile CSS
+	// Compile the CSS file with PostCSS
 	const compileCss = (filepath: string, filename: string) =>
 		fs.readFile(filepath)
 			.then((bytes) => postcss(plugins).process(bytes, { from: filepath, to: filepath }))
