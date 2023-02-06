@@ -39,19 +39,10 @@ interface Options {
 }
 
 const DEFAULT_OPTIONS: Options = {
-	// Pug views directory
 	views: 'views/',
-
-	// Output directory
 	output: 'html/',
-
-	// Tailwind CSS file
 	tailwindFile: 'tailwind.css',
-
-	// Tailwind config file
 	tailwindConfigFile: 'tailwind.config.js',
-
-	// PostCSS plugins
 	postcssPlugins: [],
 };
 
