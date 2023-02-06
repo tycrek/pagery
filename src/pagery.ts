@@ -94,7 +94,7 @@ const generate = (options: Options) => {
 	// Load data files
 	let dataLoaders: Promise<void>[] = [];
 	if (options.data && options.data.constructor === Array) {
-		log.debug('Loading data files');
+		log.debug(`Loading ${options.data.length} data files`);
 		dataLoaders = options.data.map((file): Promise<void> => new Promise((resolve, reject) => {
 			const filename = file.split('/').pop()?.split('.').shift() || null;
 			return !filename
@@ -115,22 +115,23 @@ const generate = (options: Options) => {
 
 			// Compile all the Pug files
 			fs.readdir(options.views)
-				.then((files) => files.filter((file) => file.endsWith('.pug')))
-				.then((files) => files.map((file) => file.replace('.pug', '')))
-				.then((files) => Promise.all(files.map((file) => {
+				.then((files) => files.filter((file) => file.endsWith('.pug')).map((file) => file.replace('.pug', '')))
+				.then((files) => Promise.all([
+					log.debug(`Compiling ${files.length} Pug files`),
+					...files.map((file) => {
 
-					// Check if file is excluded
-					if (options.exclude && (options.exclude.toString() === file.concat('.pug') || Array.isArray(options.exclude) && options.exclude.find((exclude) => exclude === file.concat('.pug'))))
-						return Promise.resolve();
+						// Check if file is excluded
+						if (options.exclude && (options.exclude.toString() === file.concat('.pug') || Array.isArray(options.exclude) && options.exclude.find((exclude) => exclude === file.concat('.pug'))))
+							return Promise.resolve();
 
-					// Compile Pug file
-					const pugFile = `${options.views}${file}.pug`;
-					const htmlFile = `${options.output}${file}.html`;
-					return fs.ensureFile(htmlFile)
-						.then(() => pug.renderFile(pugFile, { css, data }))
-						.then((html) => fs.writeFile(htmlFile, html))
-						.then(() => log.info(`Generated ${htmlFile}`));
-				})))
+						// Compile Pug file
+						const pugFile = `${options.views}${file}.pug`;
+						const htmlFile = `${options.output}${file}.html`;
+						return fs.ensureFile(htmlFile)
+							.then(() => pug.renderFile(pugFile, { css, data }))
+							.then((html) => fs.writeFile(htmlFile, html))
+							.then(() => log.info(`Generated ${htmlFile}`));
+					})]))
 				.then(() => log.success('Generated all files'))
 				.catch((err) => log.error(err)))
 };
