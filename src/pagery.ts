@@ -142,9 +142,9 @@ const generate = (options: Options) => new Promise(async (resolve, reject) => {
 
 	let userData: any = {};
 
-	// Load data files
+	// Set up loaders
 	let dataLoaders: Promise<void>[] = [];
-	if (options.data && options.data.constructor === Array) {
+	if (options.data && options.data.constructor === Array)
 		dataLoaders = options.data.map((file): Promise<void> => new Promise((resolve, reject) => {
 			const filename = file.split('/').pop()?.split('.').shift() || null;
 			return !filename
@@ -154,13 +154,14 @@ const generate = (options: Options) => new Promise(async (resolve, reject) => {
 					.then(resolve)
 					.catch(reject);
 		}));
-	}
 
-	// Load all the data files
-	Promise.all(dataLoaders)
+	// Load data files
+	try {
+		await Promise.all(dataLoaders);
+	} catch (err) { return reject(err); }
 
-		// Compile the CSS
-		.then(() => css(options))
+	// * Stage 3/4: Compile the CSS
+	css(options)
 		.then((css) =>
 
 			// Compile all the Pug files
