@@ -161,30 +161,32 @@ const generate = (options: Options) => new Promise(async (resolve, reject) => {
 	} catch (err) { return reject(err); }
 
 	// * Stage 3/4: Compile the CSS
-	css(options)
-		.then((css) =>
+	let cssData: string | { [key: string]: string } = '';
+	try {
+		cssData = await css(options);
+	} catch (err) { return reject(err); }
 
-			// Compile all the Pug files
-			fs.readdir(options.views)
-				.then((files) => files.filter((file) => file.endsWith('.pug')).map((file) => file.replace('.pug', '')))
-				.then((files) => Promise.all([
-					log.debug(`Pug files: ${files.length}`),
-					...files.map((file) => {
+	// * Stage 4/4: Render the Pug files
+	fs.readdir(options.views)
+		.then((files) => files.filter((file) => file.endsWith('.pug')).map((file) => file.replace('.pug', '')))
+		.then((files) => Promise.all([
+			log.debug(`Pug files: ${files.length}`),
+			...files.map((file) => {
 
-						// Check if file is excluded
-						if (options.exclude && (options.exclude.toString() === file.concat('.pug') || Array.isArray(options.exclude) && options.exclude.find((exclude) => exclude === file.concat('.pug'))))
-							return Promise.resolve();
+				// Check if file is excluded
+				if (options.exclude && (options.exclude.toString() === file.concat('.pug') || Array.isArray(options.exclude) && options.exclude.find((exclude) => exclude === file.concat('.pug'))))
+					return Promise.resolve();
 
-						// Compile Pug file
-						const pugFile = `${options.views}${file}.pug`;
-						const htmlFile = `${options.output}${file}.html`;
-						return fs.ensureFile(htmlFile)
-							.then(() => pug.renderFile(pugFile, { css, data: userData }))
-							.then((html) => fs.writeFile(htmlFile, html))
-							.then(() => log.info(`Generated ${htmlFile}`));
-					})]))
-				.then(() => log.success('Generated all files'))
-				.catch((err) => log.error(err)))
+				// Compile Pug file
+				const pugFile = `${options.views}${file}.pug`;
+				const htmlFile = `${options.output}${file}.html`;
+				return fs.ensureFile(htmlFile)
+					.then(() => pug.renderFile(pugFile, { css: cssData, data: userData }))
+					.then((html) => fs.writeFile(htmlFile, html))
+					.then(() => log.info(`Generated ${htmlFile}`));
+			})]))
+		.then(() => log.success('Generated all files'))
+		.catch((err) => log.error(err));
 });
 
 // Check if being run on the command line
