@@ -6,6 +6,7 @@ import pug from 'pug';
 import fs from 'fs-extra';
 import tailwindcss from 'tailwindcss';
 import { Logger } from './logger';
+import { PageryError } from './PageryError';
 
 const path = (...args: string[]) => Path.join(process.cwd(), ...args);
 
@@ -87,9 +88,63 @@ const css = (options: Options): Promise<string | { [key: string]: string }> => n
 			.catch(reject);
 });
 
-const generate = (options: Options) => {
+const generate = (options: Options) => new Promise(async (resolve, reject) => {
 
-	let data: any = {};
+	// * Stage 1/4: Check if files exist
+	const checker = (file: string) => fs.pathExists(file).then((exists) => exists ? Promise.resolve()
+		: Promise.reject(new PageryError(`File not found: ${file}`, 'Create this file or remove it from the configuration.')));
+
+	// User data
+	if (options.data != null) {
+
+		// Ensure input is an array
+		if (typeof options.data === 'string')
+			options.data = [options.data];
+
+		// Check if data files exist
+		for (const data of options.data)
+			try { await checker(data); }
+			catch (err) { return reject(err); }
+	}
+	else log.debug('No data files specified');
+
+	// Tailwind (.css and .config.js)
+	// Ensure input is an array
+	if (typeof options.tailwindFile === 'string')
+		options.tailwindFile = [options.tailwindFile];
+
+	// Check if Tailwind files exist
+	for (const file of options.tailwindFile)
+		try { await checker(file); }
+		catch (err) { return reject(err); }
+
+	// Check if Tailwind config file exists
+	try { await checker(options.tailwindConfigFile); }
+	catch (err) { return reject(err); }
+
+	// Views directory (ensure at least one .pug file exists)
+	try {
+		const files = await fs.readdir(options.views);
+		if (!files.some((file) => file.endsWith('.pug')))
+			return reject(new PageryError(`No .pug files found in ${options.views}`, 'Create at least one .pug file in this directory.'));
+	} catch (err) { return reject(err); }
+
+	// Output directory (create if it doesn't exist)
+	try {
+		const exists = await fs.pathExists(options.output);
+		if (!exists) {
+			log.debug(`Creating output directory ${options.output}`);
+			await fs.mkdir(options.output);
+		}
+	} catch (err) { return reject(err); }
+
+	// Log how many files there are
+	log.debug(`User data files: ${options.data ? options.data.length : 0}`);
+	log.debug(`Tailwind CSS files: ${options.tailwindFile.length}`);
+
+	// * Stage 2/4: Load data files
+
+	let userData: any = {};
 
 	// Load data files
 	let dataLoaders: Promise<void>[] = [];
@@ -100,7 +155,7 @@ const generate = (options: Options) => {
 			return !filename
 				? resolve(void 0)
 				: fs.readJson(file)
-					.then((json) => data[filename] = json)
+					.then((json) => userData[filename] = json)
 					.then(resolve)
 					.catch(reject);
 		}));
@@ -128,13 +183,13 @@ const generate = (options: Options) => {
 						const pugFile = `${options.views}${file}.pug`;
 						const htmlFile = `${options.output}${file}.html`;
 						return fs.ensureFile(htmlFile)
-							.then(() => pug.renderFile(pugFile, { css, data }))
+							.then(() => pug.renderFile(pugFile, { css, data: userData }))
 							.then((html) => fs.writeFile(htmlFile, html))
 							.then(() => log.info(`Generated ${htmlFile}`));
 					})]))
 				.then(() => log.success('Generated all files'))
 				.catch((err) => log.error(err)))
-};
+});
 
 // Check if being run on the command line
 if (require.main === module) {
@@ -187,15 +242,8 @@ if (require.main === module) {
 	if (typeof options.exclude === 'string')
 		options.exclude = options.exclude.split(',');
 
-	// Check if files exist
-	Promise.all([
-		fs.access(`${options.views}index.pug`),
-		!Array.isArray(options.tailwindFile) ? fs.access(path(options.tailwindFile)) : Promise.all(options.tailwindFile.map((file) => fs.access(path(file)))),
-		fs.access(options.tailwindConfigFile),
-		fs.ensureDir(options.output)
-	])
-		.then(() => log.debug('Files exist'))
-		.then(() => generate(options))
+	// Run the generator
+	generate(options)
 		.catch((err) => (console.log(err), log.error(err), process.exit(1)));
 } else {
 	log.error('Fuck off, module not implemented yet');
