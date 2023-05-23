@@ -75,7 +75,7 @@ const css = (options: Options): Promise<string | { [key: string]: string }> => n
 	const css: { [key: string]: string } = {};
 	return Array.isArray(options.tailwindFile)
 		? Promise.all([...options.tailwindFile.map((file) => compileCss(path(file)).then((data) => css[file.match(/^(.*)(?=\.)/g)![0]] = data))])
-			.then(() => resolve(css))
+			.then(() => resolve(options.tailwindFile.length > 1 ? css : Object.values(css)[0]))
 			.catch(reject)
 
 		// Otherwise, just compile the one file
