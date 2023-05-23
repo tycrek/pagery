@@ -16,7 +16,7 @@
 	"scripts": {
 		"build": "rm -dr ./dist/ & tsc",
 		"release": "np",
-		"test": "npm run build && node ./dist/pagery.js --dir=test --data=meta.json,foo.json --exclude=head.pug,notme.pug --tailwindFile=tailwind.css,tw2.css"
+		"test": "npm run build && node ./dist/pagery.js --dir=test --data=meta.json,foo.json --exclude=head.pug,notme.pug --tailwindFile=tailwind.css"
 	},
 	"bin": {
 		"pagery": "dist/pagery.js"
