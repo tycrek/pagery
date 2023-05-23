@@ -63,27 +63,23 @@ const css = (options: Options): Promise<string | { [key: string]: string }> => n
 		options.postcssPlugins.forEach((plugin) => plugins.push(require(plugin)())); // todo: eventually somehow support plugin options
 
 	// Compile the CSS file with PostCSS
-	const compileCss = (filepath: string, filename: string) =>
+	const compileCss = (filepath: string) =>
 		fs.readFile(filepath)
 			.then((bytes) => postcss(plugins).process(bytes, { from: filepath, to: filepath }))
 			.then((result) => {
 				if (result.warnings && result.warnings().length) throw new Error(result.warnings().join(', '));
-				log.debug(`Compiled ${filename}`);
 				return result.css;
 			});
 
 	// If array, we'll save to a map so the CSS can be accessed by filename
 	const css: { [key: string]: string } = {};
 	return Array.isArray(options.tailwindFile)
-		? Promise.all([
-			log.debug(`Compiling ${options.tailwindFile.length} Tailwind CSS files`),
-			...options.tailwindFile.map((file) => compileCss(path(file), file).then((data) => css[file.match(/^(.*)(?=\.)/g)![0]] = data))
-		])
+		? Promise.all([...options.tailwindFile.map((file) => compileCss(path(file)).then((data) => css[file.match(/^(.*)(?=\.)/g)![0]] = data))])
 			.then(() => resolve(css))
 			.catch(reject)
 
 		// Otherwise, just compile the one file
-		: compileCss(path(options.tailwindFile), options.tailwindFile)
+		: compileCss(path(options.tailwindFile))
 			.then((data) => resolve(data))
 			.catch(reject);
 });
@@ -149,7 +145,6 @@ const generate = (options: Options) => new Promise(async (resolve, reject) => {
 	// Load data files
 	let dataLoaders: Promise<void>[] = [];
 	if (options.data && options.data.constructor === Array) {
-		log.debug(`Loading ${options.data.length} data files`);
 		dataLoaders = options.data.map((file): Promise<void> => new Promise((resolve, reject) => {
 			const filename = file.split('/').pop()?.split('.').shift() || null;
 			return !filename
@@ -172,7 +167,7 @@ const generate = (options: Options) => new Promise(async (resolve, reject) => {
 			fs.readdir(options.views)
 				.then((files) => files.filter((file) => file.endsWith('.pug')).map((file) => file.replace('.pug', '')))
 				.then((files) => Promise.all([
-					log.debug(`Compiling ${files.length} Pug files`),
+					log.debug(`Pug files: ${files.length}`),
 					...files.map((file) => {
 
 						// Check if file is excluded
