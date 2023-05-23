@@ -35,7 +35,7 @@ pagery is my personal static site generator, primarily to be used with [Cloudfla
 - Included PostCSS plugins:
    - [autoprefixer](https://npmjs.com/package/autoprefixer)
    - [cssnano](https://cssnano.co/)
-   - [postcss-font-magician](https://npmjs.com/package/postcss-font-magician)
+   - [@tinycreek/postcss-font-magician](https://www.npmjs.com/package/@tinycreek/postcss-font-magician)
 
 ## Installation
 
@@ -77,9 +77,13 @@ Add the following to `tailwind.css`:
 
 It is highly recommended to use [Tailwind `@layer`](https://tailwindcss.com/docs/adding-custom-styles#using-css-and-layer) directives to organize your CSS and avoid [specificity issues](https://www.w3schools.com/css/css_specificity.asp).
 
+#### Multiple Tailwind configurations
+
+As of Tailwind v3.2, you are able to use [multiple config files in one project](https://tailwindcss.com/blog/tailwindcss-v3-2#multiple-config-files-in-one-project-using-config). Reference Tailwinds documentation for more information.
+
 ### Step 2: Setup Pug
 
-Create a `views` directory in the root of your project. This is where all of your Pug files will go. An `index.pug` file is required to generate the `index.html` file which most hosting providers will use as the default page.
+Create a `views` directory in the root of your project. This is where all of your Pug files will go. At least one `.pug` file is required for compilation to work.
 
 #### Loading the CSS
 
@@ -105,6 +109,8 @@ style
 style
     != css.admin
 ```
+
+The item names correspond to the filenames of the CSS files.
 
 #### Using Tailwind classes
 
