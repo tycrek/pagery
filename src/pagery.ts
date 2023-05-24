@@ -22,7 +22,46 @@ const DEFAULT_OPTIONS: Options = {
 	postcssPlugins: [],
 };
 
-// Compile CSS
+const chdir = (dir: string) => {
+	process.chdir(dir);
+	log.debug(`Changed directory to ${dir}`);
+};
+
+/**
+ * Reads the provided config file
+ */
+const readConfigFile = (file: string): Promise<Options> => new Promise(async (resolve, reject) => {
+	// Check if config file exists as-is
+	let filePathValid = await fs.pathExists(file);
+
+	// Try to fix with a path
+	if (!filePathValid) {
+		file = path(file);
+		filePathValid = await fs.pathExists(file);
+	}
+
+	// If still invalid, reject
+	if (!filePathValid)
+		return reject(new PageryError(`Provided config ${file} does not seem to exist`, 'Make sure this file exists and there are no typos in your configuration.'));
+
+	// Read the config file
+	const rawConfig: ConfigFile = await fs.readJson(file);
+
+	// Merge default options with config file options
+	const options: Options = {
+		...DEFAULT_OPTIONS,
+		...rawConfig,
+	};
+
+	// Change directory if specified
+	if (options.dir) chdir(options.dir);
+
+	return resolve(options);
+});
+
+/**
+ * Compile CSS
+ */
 const css = (options: Options): Promise<string | { [key: string]: string }> => new Promise((resolve, reject) => {
 
 	// Load PostCSS plugins
@@ -184,40 +223,47 @@ if (require.main === module) {
 		return acc;
 	}, {} as Record<string, string>);
 
-	// Merge default options with command line arguments
-	const options: Options = {
-		...DEFAULT_OPTIONS,
-		...args,
-	};
+	// Generic error printer
+	const errorPrint = (err: any) => (console.log(err), log.error(err), process.exit(1));
 
-	// Change directory if specified
-	if (options.dir)
-		process.chdir(options.dir);
+	// * Config file operation
+	if (args.config)
+		readConfigFile(args.config).then((options) => generate(options)).catch(errorPrint);
+	// * Command line operation
+	else {
+		// Merge default options with command line arguments
+		const options: Options = {
+			...DEFAULT_OPTIONS,
+			...args,
+		};
 
-	// Convert paths to absolute paths
-	const fixSlashes = (str: string) => str.concat(str.includes('/') ? '/' : '\\').replaceAll('//', '/').replaceAll('\\\\', '\\');
-	options.views = fixSlashes(path(options.views));
-	options.output = fixSlashes(path(options.output));
+		// Change directory if specified
+		if (options.dir) chdir(options.dir);
 
-	// Parse Tailwind CSS files
-	if (typeof options.tailwindFile === 'string')
-		options.tailwindFile = options.tailwindFile.split(',');
+		// Convert paths to absolute paths
+		const fixSlashes = (str: string) => str.concat(str.includes('/') ? '/' : '\\').replaceAll('//', '/').replaceAll('\\\\', '\\');
+		options.views = fixSlashes(path(options.views));
+		options.output = fixSlashes(path(options.output));
 
-	// Split PostCSS plugins into an array
-	if (typeof options.postcssPlugins === 'string')
-		options.postcssPlugins = options.postcssPlugins.split(',');
+		// Parse Tailwind CSS files
+		if (typeof options.tailwindFile === 'string')
+			options.tailwindFile = options.tailwindFile.split(',');
 
-	// Convert data files to an array
-	if (typeof options.data === 'string')
-		options.data = options.data.split(',');
+		// Split PostCSS plugins into an array
+		if (typeof options.postcssPlugins === 'string')
+			options.postcssPlugins = options.postcssPlugins.split(',');
 
-	// Convert exclude files to an array
-	if (typeof options.exclude === 'string')
-		options.exclude = options.exclude.split(',');
+		// Convert data files to an array
+		if (typeof options.data === 'string')
+			options.data = options.data.split(',');
 
-	// Run the generator
-	generate(options)
-		.catch((err) => (console.log(err), log.error(err), process.exit(1)));
+		// Convert exclude files to an array
+		if (typeof options.exclude === 'string')
+			options.exclude = options.exclude.split(',');
+
+		// Run the generator
+		generate(options).catch(errorPrint);
+	}
 } else {
 	log.error('Fuck off, module not implemented yet');
 	process.exit(1);
