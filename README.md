@@ -199,3 +199,25 @@ pagery --views=pug/ --output=public/ --dir=website/
 # or
 pagery --dir=public/ --data=language.json --tailwindFile=css/main.css,css/admin.css
 ```
+
+#### Using a config file
+
+There is an additional command line option: **`--config`**. By specifying this flag, as well as a `.json` file, pagery will ignore all other command line options and instead use the options specified in the config file.
+
+The config file supports all the same options as the command line, except for `--config` itself. For example:
+
+```json
+{
+    "views": "pug/",
+    "output": "public/",
+    "dir": "website/",
+    "data": "language.json",
+    "tailwindFile": "css/main.css,css/admin.css"
+}
+```
+
+This would be the same as running:
+
+```bash
+npm run pagery --views=pug/ --output=public/ --dir=website/ --data=language.json --tailwindFile=css/main.css,css/admin.css
+```
