@@ -1,0 +1,12 @@
+{
+	"dir": "test",
+	"data": [
+		"meta.json",
+		"foo.json"
+	],
+	"exclude": [
+		"head.pug",
+		"notme.pug"
+	],
+	"output": "html-config/"
+}
