@@ -6,38 +6,13 @@ import pug from 'pug';
 import fs from 'fs-extra';
 import tailwindcss from 'tailwindcss';
 import { Logger } from './logger';
+import { Options, ConfigFile } from './Options';
 import { PageryError } from './PageryError';
 
 const path = (...args: string[]) => Path.join(process.cwd(), ...args);
 
 const pkg: { name: string, version: string, homepage: string } = fs.readJsonSync(Path.join(__dirname, '../package.json'));
 const log = new Logger(`${pkg.name} v${pkg.version} |`);
-
-interface Options {
-	// Pug views directory
-	views: string;
-
-	// Output directory
-	output: string;
-
-	// Tailwind CSS file. Can be a string or an array of strings.
-	tailwindFile: string | string[];
-
-	// Tailwind config file
-	tailwindConfigFile: string;
-
-	// PostCSS plugins. Can be a string or an array of strings.
-	postcssPlugins: string | string[];
-
-	// Directory to run in
-	dir?: string;
-
-	// Data files to pass to Pug. Can be a string or an array of strings of JSON files.
-	data?: string | string[];
-
-	// Files to exclude from rendering. Can be a string or an array of strings.
-	exclude?: string | string[];
-}
 
 const DEFAULT_OPTIONS: Options = {
 	views: 'views/',
@@ -189,7 +164,7 @@ const generate = (options: Options) => new Promise(async (resolve, reject) => {
 		.catch((err) => log.error(err));
 });
 
-// Check if being run on the command line
+// * Check if being run on the command line
 if (require.main === module) {
 
 	/*
