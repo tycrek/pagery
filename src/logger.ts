@@ -11,13 +11,19 @@ export const CLI_COLOURS = {
 
 export class Logger {
 	private prefix: string;
+	private enabled: boolean = true;
 
 	constructor(prefix: string) {
 		this.prefix = prefix;
 	}
 
 	private log(func: Function, message: string) {
+		if (!this.enabled) return;
 		func(`${CLI_COLOURS.grey}${this.prefix}${CLI_COLOURS.RESET} ${message}${CLI_COLOURS.RESET}`);
+	}
+
+	setEnabled(enabled: boolean) {
+		this.enabled = enabled;
 	}
 
 	debug(message: string) {
