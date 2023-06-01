@@ -22,6 +22,9 @@ const DEFAULT_OPTIONS: Options = {
 	postcssPlugins: [],
 };
 
+/**
+ * Quick function to change directory & log it
+ */
 const chdir = (dir: string) => {
 	process.chdir(dir);
 	log.debug(`Changed directory to ${dir}`);
@@ -98,7 +101,10 @@ const css = (options: Options): Promise<string | { [key: string]: string }> => n
 			.catch(reject);
 });
 
-const generate = (options: Options) => new Promise(async (resolve, reject) => {
+/**
+ * Universal function for generating HTML via CLI, config, or module
+ */
+const generateAll = (options: Options, module = false): Promise<void | { pug: { [key: string]: string }, css: string | { [key: string]: string } }> => new Promise(async (resolve, reject) => {
 
 	// * Stage 1/4: Check if files exist
 	const checker = (file: string) => fs.pathExists(file).then((exists) => exists ? Promise.resolve()
@@ -180,8 +186,11 @@ const generate = (options: Options) => new Promise(async (resolve, reject) => {
 		cssData = await css(options);
 	} catch (err) { return reject(err); }
 
+	// Set up for module export (aka not saving file)
+	let pugData: { [key: string]: string } = {};
+
 	// * Stage 4/4: Render the Pug files
-	fs.readdir(options.views)
+	return fs.readdir(options.views)
 		.then((files) => files.filter((file) => file.endsWith('.pug')).map((file) => file.replace('.pug', '')))
 		.then((files) => Promise.all([
 			log.debug(`Pug files: ${files.length}`),
@@ -196,10 +205,15 @@ const generate = (options: Options) => new Promise(async (resolve, reject) => {
 				const htmlFile = `${options.output}${file}.html`;
 				return fs.ensureFile(htmlFile)
 					.then(() => pug.renderFile(pugFile, { css: cssData, data: userData }))
-					.then((html) => fs.writeFile(htmlFile, html))
+					.then((html) => {
+						// ! TypeScript complains if this is ternary so leave as-is
+						if (module) pugData[file] = html;
+						else return fs.writeFile(htmlFile, html);
+					})
 					.then(() => log.info(`Generated ${htmlFile}`));
 			})]))
 		.then(() => log.success('Generated all files'))
+		.then(() => resolve(module ? { pug: pugData, css: cssData } : void 0))
 		.catch((err) => log.error(err));
 });
 
@@ -228,7 +242,7 @@ if (require.main === module) {
 
 	// * Config file operation
 	if (args.config)
-		readConfigFile(args.config).then((options) => generate(options)).catch(errorPrint);
+		readConfigFile(args.config).then((options) => generateAll(options)).catch(errorPrint);
 	// * Command line operation
 	else {
 		// Merge default options with command line arguments
@@ -262,9 +276,27 @@ if (require.main === module) {
 			options.exclude = options.exclude.split(',');
 
 		// Run the generator
-		generate(options).catch(errorPrint);
+		generateAll(options).catch(errorPrint);
 	}
-} else {
-	log.error('Fuck off, module not implemented yet');
-	process.exit(1);
 }
+
+/**
+ * Generate as a module
+ */
+export const generate = (options: Options, logging = false) => {
+
+	// Logging?
+	log.setEnabled(logging);
+	log.debug('Running as module');
+
+	// Merge default options with user options
+	const mergedOptions = {
+		...DEFAULT_OPTIONS,
+		...options
+	};
+
+	// Change dir
+	if (options.dir) chdir(options.dir);
+
+	return generateAll(mergedOptions, true);
+};
