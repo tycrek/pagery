@@ -221,3 +221,24 @@ This would be the same as running:
 ```bash
 npm run pagery --views=pug/ --output=public/ --dir=website/ --data=language.json --tailwindFile=css/main.css,css/admin.css
 ```
+
+#### Importing as a module
+
+You can also import pagery as a module and use it in your own scripts for dynamic server-side rendering. For example:
+
+```js
+const { generate } = require('pagery');
+
+generate({
+    views: 'pug/',
+    output: 'public/',
+    dir: 'website/',
+    data: 'language.json',
+    tailwindFile: 'css/main.css,css/admin.css'
+})
+    .then((data) => {
+        console.log(`HTML files: ${Object.keys(data.pug).length}`);
+        console.log(`CSS files: ${data.css instanceof Array ? data.css.length : 1}`);
+    })
+    .catch((err) => console.error(err));
+```
