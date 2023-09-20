@@ -184,10 +184,12 @@ This will compile your Pug files into HTML in the `html/` directory.
 
 | Option | Description | Default |
 |--------|-------------|---------|
+| `--config` | Use a config file instead of CLI parameters | `null` |
 | `--views` | Directory where your Pug files are located | `views/` |
 | `--output` | Directory where the compiled HTML files will be placed | `html/` |
 | `--tailwindFile` | Path to your Tailwind CSS file(s) | `tailwind.css` |
 | `--tailwindConfigFile` | Path to your Tailwind config file | `tailwind.config.js` |
+| `--outputCss` | Save compiled CSS to file | `true` |
 | `--dir` | Directory to run pagery in | `./` |
 | `--data` | Path to JSON file(s) containing data to pass to Pug files | `null` |
 | `--exclude` | Comma-separated list of Pug files to exclude from the output | `null` |
