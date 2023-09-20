@@ -4,7 +4,8 @@ generate({
 	dir: './test',
 	output: './html-module/',
 	data: ['foo.json', 'meta.json'],
-	exclude: ['notme.pug', 'head.pug']
+	exclude: ['notme.pug', 'head.pug'],
+	tailwindFile: ['tailwind.css', 'tailwind.2.css']
 })
 	.then((data) => {
 		console.log(`HTML files generated: ${Object.keys(data.pug).length}`);

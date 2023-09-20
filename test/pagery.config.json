@@ -8,5 +8,9 @@
 		"head.pug",
 		"notme.pug"
 	],
+	"tailwindFile": [
+		"tailwind.css",
+		"tailwind.2.css"
+	],
 	"output": "html-config/"
 }
