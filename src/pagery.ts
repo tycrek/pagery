@@ -223,6 +223,7 @@ if (require.main === module) {
 	/*
 	 * Parse command line arguments
 	 *
+	 * --config=config.json
 	 * --views=views/               # Pug main file
 	 * --output=html/               # Output directory
 	 * --tailwindFile=tailwind.css  # Tailwind CSS file
