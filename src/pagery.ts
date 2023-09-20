@@ -19,6 +19,7 @@ const DEFAULT_OPTIONS: Options = {
 	output: 'html/',
 	tailwindFile: 'tailwind.css',
 	tailwindConfigFile: 'tailwind.config.js',
+	outputCss: true,
 	postcssPlugins: [],
 };
 
@@ -184,6 +185,18 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 	let cssData: string | { [key: string]: string } = '';
 	try {
 		cssData = await css(options);
+		const write = (fn: string, c: string) => fs.writeFileSync(`${options.output}css/${fn}.css`, c);
+
+		if (options.outputCss) {
+			// Ensure the directory exists
+			fs.ensureDir(`${options.output}/css/`);
+
+			// Save CSS files
+			if (typeof cssData === 'string')
+				write('pagery', cssData);
+			else for (let [filename, contents] of Object.entries(cssData))
+				write(filename, contents);
+		}
 	} catch (err) { return reject(err); }
 
 	// Set up for module export (aka not saving file)
@@ -244,6 +257,7 @@ if (require.main === module) {
 	 * --output=html/               # Output directory
 	 * --tailwindFile=tailwind.css  # Tailwind CSS file
 	 * --tailwindConfigFile=tailwind.config.js  # Tailwind config file
+	 * --outputCss=true             # Saves compiled CSS to file
 	 * --dir=./                     # Run in this directory
 	 * --data=data.json             # Data file(s) to pass to Pug
 	 * --exclude=views/_head.pug    # File(s) to exclude from rendering
@@ -275,6 +289,9 @@ if (require.main === module) {
 		const fixSlashes = (str: string) => str.concat(str.includes('/') ? '/' : '\\').replaceAll('//', '/').replaceAll('\\\\', '\\');
 		options.views = fixSlashes(path(options.views));
 		options.output = fixSlashes(path(options.output));
+
+		// Fix outputCss boolean
+		if (options.outputCss) options.outputCss = JSON.parse(options.outputCss as any as string);
 
 		// Parse Tailwind CSS files
 		if (typeof options.tailwindFile === 'string')

@@ -11,6 +11,9 @@ export interface Options {
 	// Tailwind config file
 	tailwindConfigFile: string;
 
+	// Output compiled CSS as files
+	outputCss: boolean;
+
 	// PostCSS plugins. Can be a string or an array of strings.
 	postcssPlugins: string | string[];
 
@@ -27,6 +30,7 @@ export interface Options {
 export interface ConfigFile {
 	views?: string;
 	output?: string;
+	outputCss?: boolean;
 	tailwindFile?: string | string[];
 	tailwindConfigFile?: string;
 	postcssPlugins?: string | string[];
