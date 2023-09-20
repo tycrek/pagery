@@ -190,28 +190,44 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 	let pugData: { [key: string]: string } = {};
 
 	// * Stage 4/4: Render the Pug files
-	return fs.readdir(options.views)
-		.then((files) => files.filter((file) => file.endsWith('.pug')).map((file) => file.replace('.pug', '')))
-		.then((files) => Promise.all([
-			log.debug(`Pug files: ${files.length}`),
-			...files.map((file) => {
 
-				// Check if file is excluded
-				if (options.exclude && (options.exclude.toString() === file.concat('.pug') || Array.isArray(options.exclude) && options.exclude.find((exclude) => exclude === file.concat('.pug'))))
-					return Promise.resolve();
+	// Recursively gets all Pug files in the provided directory (and subdirectories)
+	const pugTree = (root: string, sub = false): Promise<string[]> => new Promise((resolve, reject) =>
+		fs.readdir(root, { withFileTypes: true })
+			.then(async (files) => {
 
-				// Compile Pug file
-				const pugFile = `${options.views}${file}.pug`;
-				const htmlFile = `${options.output}${file}.html`;
-				return fs.ensureFile(htmlFile)
-					.then(() => pug.renderFile(pugFile, { css: cssData, data: userData }))
-					.then((html) => {
-						// ! TypeScript complains if this is ternary so leave as-is
-						if (module) pugData[file] = html;
-						else return fs.writeFile(htmlFile, html);
-					})
-					.then(() => log.info(`Generated ${htmlFile}`));
-			})]))
+				// Set up iterator
+				const pugFiles: string[] = [];
+				for (let file of files.filter((file) => !options.exclude?.includes(file.name)))
+
+					// Directories should be recursively checked
+					if (file.isDirectory())
+						pugFiles.push(...(await pugTree(`${root}/${file.name}`, true)));
+
+					// Otherwise get a list of Pug files
+					else if (file.isFile() && file.name.endsWith('.pug'))
+						pugFiles.push(`${sub ? root.replace(options.views, '') : ''}/${file.name.replace('.pug', '')}`);
+
+				return pugFiles;
+			})
+			.then(resolve)
+			.catch(reject));
+
+	const files = await pugTree(options.views);
+	log.debug(`Pug files: ${files.length}`);
+
+	// Process Pug files
+	Promise.all(files.map((file) => {
+		const pugFile = `${options.views}${file}.pug`, htmlFile = `${options.output}${file}.html`;
+		return fs.ensureFile(htmlFile)
+			.then(() => pug.renderFile(pugFile, { css: cssData, data: userData }))
+			.then((html) => {
+				// ! TypeScript complains if this is ternary so leave as-is
+				if (module) pugData[file] = html;
+				else return fs.writeFile(htmlFile, html);
+			})
+			.then(() => log.info(`Generated ${htmlFile}`));
+	}))
 		.then(() => log.success('Generated all files'))
 		.then(() => resolve(module ? { pug: pugData, css: cssData } : void 0))
 		.catch((err) => log.error(err));
