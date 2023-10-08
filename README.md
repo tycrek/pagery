@@ -245,3 +245,7 @@ generate({
     })
     .catch((err) => console.error(err));
 ```
+
+#### Iteration Generation
+
+*Docs for this feature are coming soon.*

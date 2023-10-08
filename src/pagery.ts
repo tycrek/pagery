@@ -273,18 +273,36 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 	log.debug(`Pug files: ${files.length}`);
 	Iterations.list.length > 0 && log.debug(`Iterations: ${Iterations.list.length}`);
 
-	// Process Pug files
-	Promise.all(files.map((file) => {
-		const pugFile = `${options.views}${file}.pug`, htmlFile = `${options.output}${file}.html`;
-		return fs.ensureFile(htmlFile)
-			.then(() => pug.renderFile(pugFile, { css: cssData, data: userData }))
+	// Quick function for rendering Pug files
+	const render = (file: string, pugFile: string, htmlFile: string, data = userData) =>
+		fs.ensureFile(htmlFile)
+			.then(() => pug.renderFile(pugFile, { css: cssData, data }))
 			.then((html) => {
 				// ! TypeScript complains if this is ternary so leave as-is
 				if (module) pugData[file] = html;
 				else return fs.writeFile(htmlFile, html);
 			})
 			.then(() => log.info(`Generated ${htmlFile}`));
-	}))
+
+	// Process Pug files
+	Promise.all(files.map((file) => render(file, `${options.views}${file}.pug`, `${options.output}${file}.html`)))
+
+		// Process iterations
+		.then(() => {
+			const iterations: Promise<void>[] = [];
+
+			// Go through each Iteration template file
+			Iterations.list.forEach(({ source, iterData }) =>
+
+				// Go through all the entries for the given Iteration
+				Object.entries(iterData).forEach(([key, data]) => {
+					const file = `${source.replace(options.views, '').replace(/\[(.*)\]\.pug/, key)}`;
+					iterations.push(render(file, source, `${options.output}${file}.html`, data));
+				}));
+
+			return Promise.all(iterations);
+		})
+
 		.then(() => log.success('Generated all files'))
 		.then(() => resolve(module ? { pug: pugData, css: cssData } : void 0))
 		.catch((err) => log.error(err));
