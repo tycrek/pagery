@@ -254,8 +254,12 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 						pugFiles.push(...(await pugTree(`${root}/${file.name}`, true)));
 
 					// Otherwise get a list of Pug files
-					else if (file.isFile() && file.name.endsWith('.pug'))
+					else if (checkFile(file) && !file.name.includes('['))
 						pugFiles.push(`${sub ? root.replace(options.views, '') : ''}/${file.name.replace('.pug', '')}`);
+
+					// Or build an Iteration
+					else if (checkFile(file) && file.name.includes('[') && file.name.includes(']'))
+						Iterations.list.push(Iterations.build(file, root));
 
 				return pugFiles;
 			})
