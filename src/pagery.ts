@@ -204,6 +204,9 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 
 	// * Stage 4/4: Render the Pug files
 
+	// Basic file checker
+	const checkFile = (f: fs.Dirent) => f.isFile() && f.name.endsWith('.pug');
+
 	// Recursively gets all Pug files in the provided directory (and subdirectories)
 	const pugTree = (root: string, sub = false): Promise<string[]> => new Promise((resolve, reject) =>
 		fs.readdir(root, { withFileTypes: true })
