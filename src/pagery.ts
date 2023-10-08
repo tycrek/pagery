@@ -211,7 +211,9 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 
 				// Set up iterator
 				const pugFiles: string[] = [];
-				for (let file of files.filter((file) => !options.exclude?.includes(file.name)))
+				for (let file of files
+					.filter((file) => !options.exclude?.includes(file.name))
+					.filter((file) => (options.only?.length ?? 0) > 0 ? options.only?.includes(file.name) : true))
 
 					// Directories should be recursively checked
 					if (file.isDirectory())
@@ -261,6 +263,7 @@ if (require.main === module) {
 	 * --dir=./                     # Run in this directory
 	 * --data=data.json             # Data file(s) to pass to Pug
 	 * --exclude=views/_head.pug    # File(s) to exclude from rendering
+	 * --only=views/spec.pug        # File(s) to explicity render (nothing else)
 	 */
 	const args = process.argv.slice(2).reduce((acc, arg) => {
 		const [key, value] = arg.split('=');
@@ -308,6 +311,10 @@ if (require.main === module) {
 		// Convert exclude files to an array
 		if (typeof options.exclude === 'string')
 			options.exclude = options.exclude.split(',');
+
+		// Convert only files to an array
+		if (typeof options.only === 'string')
+			options.only = options.only.split(',');
 
 		// Run the generator
 		generateAll(options).catch(errorPrint);

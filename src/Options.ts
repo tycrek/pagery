@@ -25,6 +25,9 @@ export interface Options {
 
 	// Files to exclude from rendering. Can be a string or an array of strings.
 	exclude?: string | string[];
+
+	// Only render these specific files. Can be a string or an array of strings.
+	only?: string | string[];
 }
 
 export interface ConfigFile {
@@ -37,4 +40,5 @@ export interface ConfigFile {
 	dir?: string;
 	data?: string | string[];
 	exclude?: string | string[];
+	only?: string | string[];
 }
