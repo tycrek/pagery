@@ -3,7 +3,7 @@ const { generate } = require('../dist/pagery');
 generate({
 	dir: './test',
 	output: './html-module/',
-	data: ['foo.json', 'meta.json'],
+	data: ['foo.json', 'meta.json', 'iter.json'],
 	exclude: ['notme.pug', 'head.pug'],
 	tailwindFile: ['tailwind.css', 'tailwind.2.css']
 })

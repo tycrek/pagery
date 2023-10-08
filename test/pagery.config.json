@@ -2,7 +2,8 @@
 	"dir": "test",
 	"data": [
 		"meta.json",
-		"foo.json"
+		"foo.json",
+		"iter.json"
 	],
 	"exclude": [
 		"head.pug",
