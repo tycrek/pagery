@@ -193,6 +193,7 @@ This will compile your Pug files into HTML in the `html/` directory.
 | `--dir` | Directory to run pagery in | `./` |
 | `--data` | Path to JSON file(s) containing data to pass to Pug files | `null` |
 | `--exclude` | Comma-separated list of Pug files to exclude from the output | `null` |
+| `--only` | Comma-separated list of Pug files to explicity render | `null` |
 
 **Example:**
 
