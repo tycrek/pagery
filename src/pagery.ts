@@ -207,6 +207,37 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 	// Basic file checker
 	const checkFile = (f: fs.Dirent) => f.isFile() && f.name.endsWith('.pug');
 
+	// Iteration structure
+	interface IterationFile {
+		source: string;
+		iterData: any;
+	};
+
+	// Iteration data
+	const Iterations: { list: IterationFile[], build: (file: fs.Dirent, root: string) => IterationFile } = {
+		list: [],
+		build: (file, root) => {
+
+			// Get the name of the iteration
+			const iterationName = file.name.replaceAll(/[\[\]]|\.pug/g, '');
+
+			// Build an Iteration
+			return ({
+				source: `${root}/${file.name}`,
+				iterData: iterationName.includes(',') ? (() => {
+					const split = iterationName.split(','); // Get the data key (first element) and optional property keys
+					const prop = split.slice(1); // Get property keys, if any
+
+					// Get nested property data from a key such as [file,one,two]
+					let d = userData[split[0]];
+					for (let p of prop)
+						d = d[p.replaceAll(/[\[\]]/g, '')];
+					return d;
+				})() : userData[iterationName] // If no property keys, just the data key
+			});
+		}
+	};
+
 	// Recursively gets all Pug files in the provided directory (and subdirectories)
 	const pugTree = (root: string, sub = false): Promise<string[]> => new Promise((resolve, reject) =>
 		fs.readdir(root, { withFileTypes: true })
@@ -231,8 +262,12 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 			.then(resolve)
 			.catch(reject));
 
+	// Generate list of Pug files to render
 	const files = await pugTree(options.views);
+
+	// Log file list details for user
 	log.debug(`Pug files: ${files.length}`);
+	Iterations.list.length > 0 && log.debug(`Iterations: ${Iterations.list.length}`);
 
 	// Process Pug files
 	Promise.all(files.map((file) => {
