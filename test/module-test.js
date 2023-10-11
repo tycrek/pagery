@@ -9,7 +9,7 @@ generate({
 })
 	.then((data) => {
 		const html = Object.keys(data.pug).length,
-			css = data.css instanceof Array ? data.css.length : 1;
+			css = typeof data.css === 'object' ? Object.entries(data.css).length : 1;
 
 		console.log(`HTML files generated:`, html);
 		console.log(`CSS files generated:`, css);
