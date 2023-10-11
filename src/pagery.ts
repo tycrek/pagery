@@ -24,6 +24,27 @@ const DEFAULT_OPTIONS: Options = {
 };
 
 /**
+ * Generic error printer
+ */
+const errorPrint = (err: any) => (console.log(err), log.error(err), process.exit(1));
+
+/**
+ * Fixes slashes in strings
+ */
+const fixSlashes = (str: string) => str.concat(str.includes('/') ? '/' : '\\').replaceAll('//', '/').replaceAll('\\\\', '\\');
+
+/**
+ * Checks if the provided file is a .pug file
+ */
+const isPugFile = (f: fs.Dirent) => f.isFile() && f.name.endsWith('.pug');
+
+/**
+ * Promise-focused file existance checker
+ */
+const doesFileExist = (file: string) => fs.pathExists(file).then((exists) => exists ? Promise.resolve()
+	: Promise.reject(new PageryError(`File not found: ${file}`, 'Create this file or remove it from the configuration.')));
+
+/**
  * Quick function to change directory & log it
  */
 const chdir = (dir: string) => {
@@ -107,9 +128,10 @@ const css = (options: Options): Promise<string | { [key: string]: string }> => n
  */
 const generateAll = (options: Options, module = false): Promise<void | { pug: { [key: string]: string }, css: string | { [key: string]: string } }> => new Promise(async (resolve, reject) => {
 
+	// Set up for module export (aka not saving file)
+	let pugData: { [key: string]: string } = {};
+
 	// * Stage 1/4: Check if files exist
-	const checker = (file: string) => fs.pathExists(file).then((exists) => exists ? Promise.resolve()
-		: Promise.reject(new PageryError(`File not found: ${file}`, 'Create this file or remove it from the configuration.')));
 
 	// User data
 	if (options.data != null) {
@@ -120,7 +142,7 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 
 		// Check if data files exist
 		for (const data of options.data)
-			try { await checker(data); }
+			try { await doesFileExist(data); }
 			catch (err) { return reject(err); }
 	}
 	else log.debug('No data files specified');
@@ -132,11 +154,11 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 
 	// Check if Tailwind files exist
 	for (const file of options.tailwindFile)
-		try { await checker(file); }
+		try { await doesFileExist(file); }
 		catch (err) { return reject(err); }
 
 	// Check if Tailwind config file exists
-	try { await checker(options.tailwindConfigFile); }
+	try { await doesFileExist(options.tailwindConfigFile); }
 	catch (err) { return reject(err); }
 
 	// Views directory (ensure at least one .pug file exists)
@@ -182,6 +204,7 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 	} catch (err) { return reject(err); }
 
 	// * Stage 3/4: Compile the CSS
+
 	let cssData: string | { [key: string]: string } = '';
 	try {
 		cssData = await css(options);
@@ -199,13 +222,7 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 		}
 	} catch (err) { return reject(err); }
 
-	// Set up for module export (aka not saving file)
-	let pugData: { [key: string]: string } = {};
-
 	// * Stage 4/4: Render the Pug files
-
-	// Basic file checker
-	const checkFile = (f: fs.Dirent) => f.isFile() && f.name.endsWith('.pug');
 
 	// Iteration structure
 	interface IterationFile {
@@ -254,11 +271,11 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 						pugFiles.push(...(await pugTree(`${root}/${file.name}`, true)));
 
 					// Otherwise get a list of Pug files
-					else if (checkFile(file) && !file.name.includes('['))
+					else if (isPugFile(file) && !file.name.includes('['))
 						pugFiles.push(`${sub ? root.replace(options.views, '') : ''}/${file.name.replace('.pug', '')}`);
 
 					// Or build an Iteration
-					else if (checkFile(file) && file.name.includes('[') && file.name.includes(']'))
+					else if (isPugFile(file) && file.name.includes('[') && file.name.includes(']'))
 						Iterations.list.push(Iterations.build(file, root));
 
 				return pugFiles;
@@ -331,9 +348,6 @@ if (require.main === module) {
 		return acc;
 	}, {} as Record<string, string>);
 
-	// Generic error printer
-	const errorPrint = (err: any) => (console.log(err), log.error(err), process.exit(1));
-
 	// * Config file operation
 	if (args.config)
 		readConfigFile(args.config).then((options) => generateAll(options)).catch(errorPrint);
@@ -349,7 +363,6 @@ if (require.main === module) {
 		if (options.dir) chdir(options.dir);
 
 		// Convert paths to absolute paths
-		const fixSlashes = (str: string) => str.concat(str.includes('/') ? '/' : '\\').replaceAll('//', '/').replaceAll('\\\\', '\\');
 		options.views = fixSlashes(path(options.views));
 		options.output = fixSlashes(path(options.output));
 
