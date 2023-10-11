@@ -8,11 +8,11 @@ generate({
 	tailwindFile: ['tailwind.css', 'tailwind.2.css']
 })
 	.then((data) => {
-		console.log(`HTML files generated: ${Object.keys(data.pug).length}`);
+		const html = Object.keys(data.pug).length,
+			css = data.css instanceof Array ? data.css.length : 1;
 
-		const cssLength = data.css instanceof Array ? data.css.length : 1;
-		console.log(`CSS files generated: ${cssLength}`);
-
+		console.log(`HTML files generated:`, html);
+		console.log(`CSS files generated:`, css);
 		console.log(`Module operation completed.`);
 	})
 	.catch((err) => (console.error(err), process.exit(1)));
