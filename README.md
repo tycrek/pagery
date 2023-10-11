@@ -41,6 +41,8 @@ pagery is my personal static site generator, primarily to be used with [Cloudfla
 
 ## Installation
 
+**`npx pagery`** is the suggested way to use pagery. Alternatively, you can explicitly install it:
+
 ```bash
 npm i -g pagery
 
@@ -48,7 +50,7 @@ npm i -g pagery
 npm i pagery
 ```
 
-Global installation is recommened. If you install per project, I suggest including this script in your `package.json`:
+If you install per project, I suggest including this script in your `package.json`:
 
 ```jsonc
 {
