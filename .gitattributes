@@ -1,2 +1,3 @@
-*.js linguist-detectable=false
+*.js linguist-language=TypeScript
 *.pug linguist-detectable=false
+*.css linguist-detectable=false
