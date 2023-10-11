@@ -134,12 +134,14 @@ const css = (options: Options): Promise<string | { [key: string]: string }> => n
 const generateAll = (options: Options, module = false): Promise<void | { pug: { [key: string]: string }, css: string | { [key: string]: string } }> => new Promise(async (resolve, reject) => {
 
 	// Set up for module export (aka not saving file)
-	let pugData: { [key: string]: string } = {};
+	const pugData: { [key: string]: string } = {};
+
+	// Give it a:
 	try {
 
 		// * Stage 1/4: Check if files exist
 
-		// User data
+		// Check: user data
 		if (options.data != null) {
 
 			// Ensure input is an array
@@ -152,23 +154,23 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 		}
 		else log.debug('No data files specified');
 
-		// Tailwind (.css and .config.js)
+		// Check: Tailwind (.css and .config.js)
 		// Ensure input is an array
 		if (typeof options.tailwindFile === 'string')
 			options.tailwindFile = [options.tailwindFile];
 
-		// Check if Tailwind files exist
+		// .css files
 		for (const file of options.tailwindFile)
 			await doesFileExist(file);
 
-		// Check if Tailwind config file exists
+		// .config.js file
 		await doesFileExist(options.tailwindConfigFile);
 
-		// Views directory (ensure at least one .pug file exists)
+		// Check: views directory (ensure at least one .pug file exists)
 		if (!(await fs.readdir(options.views)).some((file) => file.endsWith('.pug')))
 			return reject(new PageryError(`No .pug files found in ${options.views}`, 'Create at least one .pug file in this directory.'));
 
-		// Output directory (create if it doesn't exist)
+		// Check: output directory (create if it doesn't exist)
 		if (!(await fs.pathExists(options.output))) {
 			log.debug(`Creating output directory ${options.output}`);
 			await fs.mkdir(options.output);
@@ -179,13 +181,11 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 		log.debug(`Tailwind CSS files: ${options.tailwindFile.length}`);
 
 		// * Stage 2/4: Load data files
+		const userData: any = {};
 
-		let userData: any = {};
-
-		// Set up loaders
-		let dataLoaders: Promise<void>[] = [];
+		// Load data files
 		if (options.data && options.data.constructor === Array)
-			dataLoaders = options.data.map((file): Promise<void> => new Promise((resolve, reject) => {
+			await Promise.all(options.data.map((file): Promise<void> => new Promise((resolve, reject) => {
 				const filename = file.split('/').pop()?.split('.').shift() || null;
 				return !filename
 					? resolve(void 0)
@@ -193,17 +193,10 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 						.then((json) => userData[filename] = json)
 						.then(resolve)
 						.catch(reject);
-			}));
-
-		// Load data files
-		await Promise.all(dataLoaders);
+			})));
 
 		// * Stage 3/4: Compile the CSS
-
-		let cssData: string | { [key: string]: string } = '';
-
-		cssData = await css(options);
-
+		const cssData = await css(options);
 
 		if (options.outputCss) {
 			// Ensure the directory exists
