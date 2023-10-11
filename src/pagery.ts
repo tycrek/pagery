@@ -92,7 +92,7 @@ const readConfigFile = (file: string): Promise<Options> => new Promise(async (re
 /**
  * Compile CSS
  */
-const css = (options: Options): Promise<string | { [key: string]: string }> => new Promise((resolve, reject) => {
+const css = (options: Options): Promise<{ [key: string]: string }> => new Promise((resolve, reject) => {
 
 	// Load PostCSS plugins
 	const plugins = [
@@ -119,12 +119,12 @@ const css = (options: Options): Promise<string | { [key: string]: string }> => n
 	const css: { [key: string]: string } = {};
 	return Array.isArray(options.tailwindFile)
 		? Promise.all([...options.tailwindFile.map((file) => compileCss(path(file)).then((data) => css[file.match(/^(.*)(?=\.)/g)![0]] = data))])
-			.then(() => resolve(options.tailwindFile.length > 1 ? css : Object.values(css)[0]))
+			.then(() => resolve(css))
 			.catch(reject)
 
 		// Otherwise, just compile the one file
 		: compileCss(path(options.tailwindFile))
-			.then((data) => resolve(data))
+			.then((data) => resolve({ pagery: data }))
 			.catch(reject);
 });
 
@@ -203,9 +203,7 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 			fs.ensureDir(`${options.output}/css/`);
 
 			// Save CSS files
-			if (typeof cssData === 'string')
-				writeCssFile(options.output, 'pagery', cssData);
-			else for (let [filename, contents] of Object.entries(cssData))
+			for (const [filename, contents] of Object.entries(cssData))
 				writeCssFile(options.output, filename, contents);
 		}
 
@@ -277,10 +275,13 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 		log.debug(`Pug files: ${files.length}`);
 		Iterations.list.length > 0 && log.debug(`Iterations: ${Iterations.list.length}`);
 
+		// Re-string cssData for the user, if only one CSS file exists
+		const _css = Object.entries(cssData).length === 1 ? cssData['pagery'] : cssData;
+
 		// Quick function for rendering Pug files
 		const render = (file: string, pugFile: string, htmlFile: string, data = userData) =>
 			fs.ensureFile(htmlFile)
-				.then(() => pug.renderFile(pugFile, { css: cssData, data }))
+				.then(() => pug.renderFile(pugFile, { css: _css, data }))
 				.then((html) => {
 					// ! TypeScript complains if this is ternary so leave as-is
 					if (module) pugData[file] = html;
