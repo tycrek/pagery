@@ -45,6 +45,11 @@ const doesFileExist = (file: string) => fs.pathExists(file).then((exists) => exi
 	: Promise.reject(new PageryError(`File not found: ${file}`, 'Create this file or remove it from the configuration.')));
 
 /**
+ * Writes provided CSS data to a file
+ */
+const writeCssFile = (out: string, fn: string, c: string) => fs.writeFileSync(`${out}css/${fn}.css`, c);
+
+/**
  * Quick function to change directory & log it
  */
 const chdir = (dir: string) => {
@@ -130,85 +135,75 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 
 	// Set up for module export (aka not saving file)
 	let pugData: { [key: string]: string } = {};
+	try {
 
-	// * Stage 1/4: Check if files exist
+		// * Stage 1/4: Check if files exist
 
-	// User data
-	if (options.data != null) {
+		// User data
+		if (options.data != null) {
 
+			// Ensure input is an array
+			if (typeof options.data === 'string')
+				options.data = [options.data];
+
+			// Check if data files exist
+			for (const data of options.data)
+				await doesFileExist(data);
+		}
+		else log.debug('No data files specified');
+
+		// Tailwind (.css and .config.js)
 		// Ensure input is an array
-		if (typeof options.data === 'string')
-			options.data = [options.data];
+		if (typeof options.tailwindFile === 'string')
+			options.tailwindFile = [options.tailwindFile];
 
-		// Check if data files exist
-		for (const data of options.data)
-			try { await doesFileExist(data); }
-			catch (err) { return reject(err); }
-	}
-	else log.debug('No data files specified');
+		// Check if Tailwind files exist
+		for (const file of options.tailwindFile)
+			await doesFileExist(file);
 
-	// Tailwind (.css and .config.js)
-	// Ensure input is an array
-	if (typeof options.tailwindFile === 'string')
-		options.tailwindFile = [options.tailwindFile];
+		// Check if Tailwind config file exists
+		await doesFileExist(options.tailwindConfigFile);
 
-	// Check if Tailwind files exist
-	for (const file of options.tailwindFile)
-		try { await doesFileExist(file); }
-		catch (err) { return reject(err); }
-
-	// Check if Tailwind config file exists
-	try { await doesFileExist(options.tailwindConfigFile); }
-	catch (err) { return reject(err); }
-
-	// Views directory (ensure at least one .pug file exists)
-	try {
-		const files = await fs.readdir(options.views);
-		if (!files.some((file) => file.endsWith('.pug')))
+		// Views directory (ensure at least one .pug file exists)
+		if (!(await fs.readdir(options.views)).some((file) => file.endsWith('.pug')))
 			return reject(new PageryError(`No .pug files found in ${options.views}`, 'Create at least one .pug file in this directory.'));
-	} catch (err) { return reject(err); }
 
-	// Output directory (create if it doesn't exist)
-	try {
-		const exists = await fs.pathExists(options.output);
-		if (!exists) {
+		// Output directory (create if it doesn't exist)
+		if (!(await fs.pathExists(options.output))) {
 			log.debug(`Creating output directory ${options.output}`);
 			await fs.mkdir(options.output);
 		}
-	} catch (err) { return reject(err); }
 
-	// Log how many files there are
-	log.debug(`User data files: ${options.data ? options.data.length : 0}`);
-	log.debug(`Tailwind CSS files: ${options.tailwindFile.length}`);
+		// Log how many files there are
+		log.debug(`User data files: ${options.data ? options.data.length : 0}`);
+		log.debug(`Tailwind CSS files: ${options.tailwindFile.length}`);
 
-	// * Stage 2/4: Load data files
+		// * Stage 2/4: Load data files
 
-	let userData: any = {};
+		let userData: any = {};
 
-	// Set up loaders
-	let dataLoaders: Promise<void>[] = [];
-	if (options.data && options.data.constructor === Array)
-		dataLoaders = options.data.map((file): Promise<void> => new Promise((resolve, reject) => {
-			const filename = file.split('/').pop()?.split('.').shift() || null;
-			return !filename
-				? resolve(void 0)
-				: fs.readJson(file)
-					.then((json) => userData[filename] = json)
-					.then(resolve)
-					.catch(reject);
-		}));
+		// Set up loaders
+		let dataLoaders: Promise<void>[] = [];
+		if (options.data && options.data.constructor === Array)
+			dataLoaders = options.data.map((file): Promise<void> => new Promise((resolve, reject) => {
+				const filename = file.split('/').pop()?.split('.').shift() || null;
+				return !filename
+					? resolve(void 0)
+					: fs.readJson(file)
+						.then((json) => userData[filename] = json)
+						.then(resolve)
+						.catch(reject);
+			}));
 
-	// Load data files
-	try {
+		// Load data files
 		await Promise.all(dataLoaders);
-	} catch (err) { return reject(err); }
 
-	// * Stage 3/4: Compile the CSS
+		// * Stage 3/4: Compile the CSS
 
-	let cssData: string | { [key: string]: string } = '';
-	try {
+		let cssData: string | { [key: string]: string } = '';
+
 		cssData = await css(options);
-		const write = (fn: string, c: string) => fs.writeFileSync(`${options.output}css/${fn}.css`, c);
+
 
 		if (options.outputCss) {
 			// Ensure the directory exists
@@ -216,113 +211,113 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 
 			// Save CSS files
 			if (typeof cssData === 'string')
-				write('pagery', cssData);
+				writeCssFile(options.output, 'pagery', cssData);
 			else for (let [filename, contents] of Object.entries(cssData))
-				write(filename, contents);
+				writeCssFile(options.output, filename, contents);
 		}
+
+		// * Stage 4/4: Render the Pug files
+
+		// Iteration structure
+		interface IterationFile {
+			source: string;
+			iterData: any;
+		};
+
+		// Iteration data
+		const Iterations: { list: IterationFile[], build: (file: fs.Dirent, root: string) => IterationFile } = {
+			list: [],
+			build: (file, root) => {
+
+				// Get the name of the iteration
+				const iterationName = file.name.replaceAll(/[\[\]]|\.pug/g, '');
+
+				// Build an Iteration
+				return ({
+					source: `${root}/${file.name}`,
+					iterData: iterationName.includes(',') ? (() => {
+						const split = iterationName.split(','); // Get the data key (first element) and optional property keys
+						const prop = split.slice(1); // Get property keys, if any
+
+						// Get nested property data from a key such as [file,one,two]
+						let d = userData[split[0]];
+						for (let p of prop)
+							d = d[p.replaceAll(/[\[\]]/g, '')];
+						return d;
+					})() : userData[iterationName] // If no property keys, just the data key
+				});
+			}
+		};
+
+		// Recursively gets all Pug files in the provided directory (and subdirectories)
+		const pugTree = (root: string, sub = false): Promise<string[]> => new Promise((resolve, reject) =>
+			fs.readdir(root, { withFileTypes: true })
+				.then(async (files) => {
+
+					// Set up iterator
+					const pugFiles: string[] = [];
+					for (let file of files
+						.filter((file) => !options.exclude?.includes(file.name))
+						.filter((file) => (options.only?.length ?? 0) > 0 ? options.only?.includes(file.name) : true))
+
+						// Directories should be recursively checked
+						if (file.isDirectory())
+							pugFiles.push(...(await pugTree(`${root}/${file.name}`, true)));
+
+						// Otherwise get a list of Pug files
+						else if (isPugFile(file) && !file.name.includes('['))
+							pugFiles.push(`${sub ? root.replace(options.views, '') : ''}/${file.name.replace('.pug', '')}`);
+
+						// Or build an Iteration
+						else if (isPugFile(file) && file.name.includes('[') && file.name.includes(']'))
+							Iterations.list.push(Iterations.build(file, root));
+
+					return pugFiles;
+				})
+				.then(resolve)
+				.catch(reject));
+
+		// Generate list of Pug files to render
+		const files = await pugTree(options.views);
+
+		// Log file list details for user
+		log.debug(`Pug files: ${files.length}`);
+		Iterations.list.length > 0 && log.debug(`Iterations: ${Iterations.list.length}`);
+
+		// Quick function for rendering Pug files
+		const render = (file: string, pugFile: string, htmlFile: string, data = userData) =>
+			fs.ensureFile(htmlFile)
+				.then(() => pug.renderFile(pugFile, { css: cssData, data }))
+				.then((html) => {
+					// ! TypeScript complains if this is ternary so leave as-is
+					if (module) pugData[file] = html;
+					else return fs.writeFile(htmlFile, html);
+				})
+				.then(() => log.info(`Generated ${htmlFile}`));
+
+		// Process Pug files
+		Promise.all(files.map((file) => render(file, `${options.views}${file}.pug`, `${options.output}${file}.html`)))
+
+			// Process iterations
+			.then(() => {
+				const iterations: Promise<void>[] = [];
+
+				// Go through each Iteration template file
+				Iterations.list.forEach(({ source, iterData }) =>
+
+					// Go through all the entries for the given Iteration
+					Object.entries(iterData).forEach(([key, data]) => {
+						const file = `${source.replace(options.views, '').replace(/\[(.*)\]\.pug/, key)}`;
+						iterations.push(render(file, source, `${options.output}${file}.html`, data));
+					}));
+
+				return Promise.all(iterations);
+			})
+
+			.then(() => log.success('Generated all files'))
+			.then(() => resolve(module ? { pug: pugData, css: cssData } : void 0))
+			.catch((err) => log.error(err));
 	} catch (err) { return reject(err); }
-
-	// * Stage 4/4: Render the Pug files
-
-	// Iteration structure
-	interface IterationFile {
-		source: string;
-		iterData: any;
-	};
-
-	// Iteration data
-	const Iterations: { list: IterationFile[], build: (file: fs.Dirent, root: string) => IterationFile } = {
-		list: [],
-		build: (file, root) => {
-
-			// Get the name of the iteration
-			const iterationName = file.name.replaceAll(/[\[\]]|\.pug/g, '');
-
-			// Build an Iteration
-			return ({
-				source: `${root}/${file.name}`,
-				iterData: iterationName.includes(',') ? (() => {
-					const split = iterationName.split(','); // Get the data key (first element) and optional property keys
-					const prop = split.slice(1); // Get property keys, if any
-
-					// Get nested property data from a key such as [file,one,two]
-					let d = userData[split[0]];
-					for (let p of prop)
-						d = d[p.replaceAll(/[\[\]]/g, '')];
-					return d;
-				})() : userData[iterationName] // If no property keys, just the data key
-			});
-		}
-	};
-
-	// Recursively gets all Pug files in the provided directory (and subdirectories)
-	const pugTree = (root: string, sub = false): Promise<string[]> => new Promise((resolve, reject) =>
-		fs.readdir(root, { withFileTypes: true })
-			.then(async (files) => {
-
-				// Set up iterator
-				const pugFiles: string[] = [];
-				for (let file of files
-					.filter((file) => !options.exclude?.includes(file.name))
-					.filter((file) => (options.only?.length ?? 0) > 0 ? options.only?.includes(file.name) : true))
-
-					// Directories should be recursively checked
-					if (file.isDirectory())
-						pugFiles.push(...(await pugTree(`${root}/${file.name}`, true)));
-
-					// Otherwise get a list of Pug files
-					else if (isPugFile(file) && !file.name.includes('['))
-						pugFiles.push(`${sub ? root.replace(options.views, '') : ''}/${file.name.replace('.pug', '')}`);
-
-					// Or build an Iteration
-					else if (isPugFile(file) && file.name.includes('[') && file.name.includes(']'))
-						Iterations.list.push(Iterations.build(file, root));
-
-				return pugFiles;
-			})
-			.then(resolve)
-			.catch(reject));
-
-	// Generate list of Pug files to render
-	const files = await pugTree(options.views);
-
-	// Log file list details for user
-	log.debug(`Pug files: ${files.length}`);
-	Iterations.list.length > 0 && log.debug(`Iterations: ${Iterations.list.length}`);
-
-	// Quick function for rendering Pug files
-	const render = (file: string, pugFile: string, htmlFile: string, data = userData) =>
-		fs.ensureFile(htmlFile)
-			.then(() => pug.renderFile(pugFile, { css: cssData, data }))
-			.then((html) => {
-				// ! TypeScript complains if this is ternary so leave as-is
-				if (module) pugData[file] = html;
-				else return fs.writeFile(htmlFile, html);
-			})
-			.then(() => log.info(`Generated ${htmlFile}`));
-
-	// Process Pug files
-	Promise.all(files.map((file) => render(file, `${options.views}${file}.pug`, `${options.output}${file}.html`)))
-
-		// Process iterations
-		.then(() => {
-			const iterations: Promise<void>[] = [];
-
-			// Go through each Iteration template file
-			Iterations.list.forEach(({ source, iterData }) =>
-
-				// Go through all the entries for the given Iteration
-				Object.entries(iterData).forEach(([key, data]) => {
-					const file = `${source.replace(options.views, '').replace(/\[(.*)\]\.pug/, key)}`;
-					iterations.push(render(file, source, `${options.output}${file}.html`, data));
-				}));
-
-			return Promise.all(iterations);
-		})
-
-		.then(() => log.success('Generated all files'))
-		.then(() => resolve(module ? { pug: pugData, css: cssData } : void 0))
-		.catch((err) => log.error(err));
 });
 
 // * Check if being run on the command line
