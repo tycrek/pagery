@@ -1,1 +1,2 @@
-test/* linguist-vendored
+*.js linguist-detectable=false
+*.pug linguist-detectable=false
