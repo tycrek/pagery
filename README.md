@@ -63,7 +63,7 @@ If you install per project, I suggest including this script in your `package.jso
 
 Then run it with `npm run pagery`.
 
-It is recommended to be using at least Node 16 and NPM 8.
+###### It is recommended to be using at least Node 20 and NPM 10.
 
 ## Usage
 
