@@ -39,6 +39,11 @@ const fixSlashes = (str: string) => str.concat(str.includes('/') ? '/' : '\\').r
 const isPugFile = (f: fs.Dirent) => f.isFile() && f.name.endsWith('.pug');
 
 /**
+ * Quick function to convert a regular string to a single-element array
+ */
+const arrayify = (input: string | string[]) => (typeof input === 'string') ? [input] : input;
+
+/**
  * Promise-focused file existance checker
  */
 const doesFileExist = (file: string) => fs.pathExists(file).then((exists) => exists ? Promise.resolve()
@@ -143,10 +148,7 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 
 		// Check: user data
 		if (options.data != null) {
-
-			// Ensure input is an array
-			if (typeof options.data === 'string')
-				options.data = [options.data];
+			options.data = arrayify(options.data);
 
 			// Check if data files exist
 			for (const data of options.data)
@@ -155,9 +157,7 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 		else log.debug('No data files specified');
 
 		// Check: Tailwind (.css and .config.js)
-		// Ensure input is an array
-		if (typeof options.tailwindFile === 'string')
-			options.tailwindFile = [options.tailwindFile];
+		options.tailwindFile = arrayify(options.tailwindFile);
 
 		// .css files
 		for (const file of options.tailwindFile)
