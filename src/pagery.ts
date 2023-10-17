@@ -276,7 +276,7 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 		Iterations.list.length > 0 && log.debug(`Iterations: ${Iterations.list.length}`);
 
 		// Re-string cssData for the user, if only one CSS file exists
-		const _css = Object.entries(cssData).length === 1 ? cssData['pagery'] : cssData;
+		const _css = Object.entries(cssData).length === 1 ? cssData[options.tailwindFile ? Object.keys(cssData)[0] : 'pagery'] : cssData;
 
 		// Quick function for rendering Pug files
 		const render = (file: string, pugFile: string, htmlFile: string, data = userData) =>
