@@ -15,7 +15,7 @@
 	},
 	"scripts": {
 		"build": "rm -dr ./dist/ & tsc",
-		"release": "np",
+		"release": "npx np",
 		"test": "npm run test:cli && npm run test:config && npm run test:module",
 		"test:cli": "npm run build && node ./dist/pagery.js --dir=test --data=meta.json,foo.json,iter.json --exclude=head.pug,notme.pug --tailwindFile=tailwind.css,tailwind.2.css",
 		"test:config": "npm run build && node ./dist/pagery.js --config=test/pagery.config.json",
