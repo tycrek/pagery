@@ -164,7 +164,25 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 			await doesFileExist(file);
 
 		// .config.js file
-		await doesFileExist(options.tailwindConfigFile);
+		await new Promise((resolve, reject) => {
+			const tcf = options.tailwindConfigFile;
+			const asJs = 'tailwind.config.js', asTs = 'tailwind.config.ts';
+
+			// First check (default or user provided)
+			doesFileExist(tcf).then(resolve).catch((err) => {
+
+				// If set by user, fail
+				if (tcf !== asJs && tcf !== asTs) reject(err);
+
+				// Otherwise check .ts variant
+				else doesFileExist(asTs).then(() => {
+					options.tailwindConfigFile = asTs;
+					resolve(void 0);
+				})
+					// Fail with original error to not confuse user
+					.catch(() => reject(err));
+			});
+		});
 
 		// Check: views directory (ensure at least one .pug file exists)
 		if (!(await fs.readdir(options.views)).some((file) => file.endsWith('.pug')))
