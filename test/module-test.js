@@ -1,4 +1,4 @@
-const { generate } = require('../dist/pagery');
+import { generate } from '../dist/pagery.js';
 
 generate({
 	dir: './test',
