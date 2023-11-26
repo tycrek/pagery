@@ -4,14 +4,19 @@ import Path from 'path';
 import postcss from 'postcss';
 import pug from 'pug';
 import fs from 'fs-extra';
-import tailwindcss from 'tailwindcss';
-import { Logger } from './logger';
-import { Options, ConfigFile } from './Options';
-import { PageryError } from './PageryError';
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+import { Logger } from './logger.js';
+import { Options, ConfigFile } from './Options.js';
+import { PageryError } from './PageryError.js';
 
+// ! Legacy normalizations
 const path = (...args: string[]) => Path.join(process.cwd(), ...args);
+const dirname = () => Path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+// ! //
 
-const pkg: { name: string, version: string, homepage: string } = fs.readJsonSync(Path.join(__dirname, '../package.json'));
+const pkg: { name: string, version: string, homepage: string } = fs.readJsonSync(Path.join(dirname(), '../package.json'));
 const log = new Logger(`${pkg.name} v${pkg.version} |`);
 
 const DEFAULT_OPTIONS: Options = {
@@ -101,7 +106,7 @@ const css = (options: Options): Promise<{ [key: string]: string }> => new Promis
 
 	// Load PostCSS plugins
 	const plugins = [
-		tailwindcss({ config: options.tailwindConfigFile }),
+		require('tailwindcss')({ config: options.tailwindConfigFile }),
 		require('autoprefixer')(),
 		require('cssnano')(),
 		require('@tinycreek/postcss-font-magician')({ protocol: 'https:' })
@@ -333,7 +338,7 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 });
 
 // * Check if being run on the command line
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
 
 	/*
 	 * Parse command line arguments

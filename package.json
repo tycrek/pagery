@@ -3,6 +3,7 @@
 	"version": "0.6.5",
 	"description": "Static site generator",
 	"main": "dist/pagery.js",
+	"type": "module",
 	"engines": {
 		"node": ">=20"
 	},
