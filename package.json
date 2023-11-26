@@ -4,8 +4,7 @@
 	"description": "Static site generator",
 	"main": "dist/pagery.js",
 	"engines": {
-		"node": ">=16.14.x",
-		"npm": ">=8.17.x"
+		"node": ">=20"
 	},
 	"files": [
 		"dist"
@@ -35,7 +34,7 @@
 	"bugs": "https://github.com/tycrek/pagery/issues",
 	"homepage": "https://github.com/tycrek/pagery#readme",
 	"devDependencies": {
-		"@tsconfig/node16": "^16.1.1",
+		"@tsconfig/node20": "^20.1.2",
 		"@types/fs-extra": "^11.0.2",
 		"@types/node": "^18.11.18",
 		"@types/pug": "^2.0.7",
