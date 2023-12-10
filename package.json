@@ -1,6 +1,6 @@
 {
 	"name": "pagery",
-	"version": "0.7.1",
+	"version": "0.7.2",
 	"description": "Static site generator",
 	"main": "dist/pagery.js",
 	"type": "module",
