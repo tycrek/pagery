@@ -230,6 +230,9 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 				await writeCssFile(options.output, filename, contents);
 		}
 
+		// log.debug(`Waiting for ${Object.entries(cssData).length * 50}`);
+		await new Promise(res => setTimeout(res, Object.entries(cssData).length * 50));
+
 		// * Stage 4/4: Render the Pug files
 
 		// Iteration structure
