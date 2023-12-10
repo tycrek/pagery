@@ -57,7 +57,7 @@ const doesFileExist = (file: string) => fs.pathExists(file).then((exists) => exi
 /**
  * Writes provided CSS data to a file
  */
-const writeCssFile = (out: string, fn: string, c: string) => fs.writeFileSync(`${out}css/${fn}.css`, c);
+const writeCssFile = (out: string, fn: string, c: string) => fs.writeFile(`${out}css/${fn}.css`, c);
 
 /**
  * Quick function to change directory & log it
@@ -227,7 +227,7 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 
 			// Save CSS files
 			for (const [filename, contents] of Object.entries(cssData))
-				writeCssFile(options.output, filename, contents);
+				await writeCssFile(options.output, filename, contents);
 		}
 
 		// * Stage 4/4: Render the Pug files
