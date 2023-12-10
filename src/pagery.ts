@@ -230,9 +230,6 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 				await writeCssFile(options.output, filename, contents);
 		}
 
-		// log.debug(`Waiting for ${Object.entries(cssData).length * 50}`);
-		await new Promise(res => setTimeout(res, Object.entries(cssData).length * 50));
-
 		// * Stage 4/4: Render the Pug files
 
 		// Iteration structure
@@ -300,6 +297,10 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 		// Log file list details for user
 		log.debug(`Pug files: ${files.length}`);
 		Iterations.list.length > 0 && log.debug(`Iterations: ${Iterations.list.length}`);
+
+		// CSS file save waiter (long story, personal repo had issue)
+		// log.debug(`Waiting for ${files.length * 50}ms`);
+		await new Promise(res => setTimeout(res, files.length * 50));
 
 		// Re-string cssData for the user, if only one CSS file exists
 		const _css = Object.entries(cssData).length === 1 ? cssData[options.tailwindFile ? Object.keys(cssData)[0] : 'pagery'] : cssData;
