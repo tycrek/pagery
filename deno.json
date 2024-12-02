@@ -1,5 +1,6 @@
 {
 	"name": "@tycrek/pagery",
+	"license": "ISC",
 	"version": "8.0.0-alpha.3",
 	"exports": "./src/pagery.ts",
 	"tasks": {
@@ -34,5 +35,6 @@
 		"tailwind.css",
 		"tailwind.config.*",
 		"src/old_pagery.ts"
-	]
+	],
+	"lock": false
 }
