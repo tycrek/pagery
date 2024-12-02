@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import Path from 'node:path';
-import process from "node:process";
 import { createRequire } from 'node:module';
 
 import postcss from 'postcss';
@@ -13,7 +12,7 @@ import type { Options, ConfigFile } from './Options.ts';
 import { PageryError } from './PageryError.ts';
 
 // ! Legacy normalizations
-const path = (...args: string[]) => Path.join(process.cwd(), ...args);
+const path = (...args: string[]) => Path.join(Deno.cwd(), ...args);
 const require = createRequire(Deno.mainModule);
 // ! //
 
@@ -32,7 +31,7 @@ const DEFAULT_OPTIONS: Options = {
 /**
  * Generic error printer
  */
-const errorPrint = (err: any) => (console.log(err), log.error(err), process.exit(1));
+const errorPrint = (err: any) => (console.log(err), log.error(err), Deno.exit(1));
 
 /**
  * Fixes slashes in strings
@@ -64,7 +63,7 @@ const writeCssFile = (out: string, fn: string, c: string) => fs.writeFile(`${out
  * Quick function to change directory & log it
  */
 const chdir = (dir: string) => {
-	process.chdir(dir);
+	Deno.chdir(dir);
 	log.debug(`Changed directory to ${dir}`);
 };
 
@@ -365,7 +364,7 @@ if (import.meta.main) {
 	 * --exclude=views/_head.pug	# File(s) to exclude from rendering
 	 * --only=views/spec.pug		# File(s) to explicity render (nothing else)
 	 */
-	const args = process.argv.slice(2).reduce((acc, arg) => {
+	const args = Deno.args.slice(2).reduce((acc, arg) => { // todo: switch to @std/parse-args
 		const [key, value] = arg.split('=');
 		acc[key.replaceAll('--', '')] = value;
 		return acc;
