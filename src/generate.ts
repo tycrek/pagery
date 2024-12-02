@@ -11,10 +11,10 @@ import { arrayify, log } from './utils.ts';
 import type { Options } from './Options.ts';
 import { Errors } from './utils.ts';
 
-const compileCss = (): Promise<{ [key: string]: string }> =>
-	new Promise((resolve, _rejct) => {
-		return resolve({});
-	});
+const compileCss = (options: Options): Promise<{ [key: string]: string }> => {
+
+	return Promise.resolve({});
+};
 
 export const generate = async (options: Options, module = false): Promise<void> => {
 	const pugData: { [key: string]: string } = {};
@@ -80,7 +80,7 @@ export const generate = async (options: Options, module = false): Promise<void> 
 
 	// * 3/4: Compile CSS
 
-	const cssData = await compileCss();
+	const cssData = await compileCss(options);
 	if (options.outputCss) {
 		await ensureDir(`${options.output}/css/`);
 		for (const [filename, contents] of Object.entries(cssData)) {
