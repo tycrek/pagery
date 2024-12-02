@@ -3,7 +3,8 @@
 	"version": "8.0.0-alpha.3",
 	"exports": "./src/pagery.ts",
 	"tasks": {
-		"run": "deno run --allow-env --allow-sys --allow-read --allow-write ./src/pagery.ts"
+		"old": "deno run --allow-env --allow-sys --allow-read --allow-write ./src/pagery.ts",
+		"run": "deno run -A --watch src/Pagery.ts"
 	},
 	"imports": {
 		"autoprefixer": "npm:autoprefixer@^10.4.20",
