@@ -4,14 +4,9 @@
 	"exports": "./src/pagery.ts",
 	"tasks": {
 		"test:blank": "deno run -A src/Pagery.ts",
-		"test:cli": "deno run -A src/Pagery.ts --dir=test --data=meta.json,foo.json,iter.json --exclude=head.pug,notme.pug --tailwindFile=tailwind.css,tailwind.2.css",
+		"test:cli": "deno run -A src/Pagery.ts --dir=test --data=meta.json,foo.json,iter.json --exclude=head.pug,notme.pug --tailwindFile=tailwind.css,tailwind.2.css --postcssPlugins=npm:postcss-attribute-case-insensitive,npm:postcss-for,npm:postcss-each,npm:postcss-reporter",
 		"test:config": "deno run -A src/Pagery.ts --config=test/pagery.config.json",
-		"test:modulex": "deno run -A ./test/module-test.ts",
-		"old": "deno run --allow-env --allow-sys --allow-read --allow-write ./src/pagery.ts",
-		"old:test": "npm run test:cli && npm run test:config && npm run test:module",
-		"old:test:cli": "npm run build && node ./dist/pagery.js --dir=test --data=meta.json,foo.json,iter.json --exclude=head.pug,notme.pug --tailwindFile=tailwind.css,tailwind.2.css",
-		"old:test:config": "npm run build && node ./dist/pagery.js --config=test/pagery.config.json",
-		"old:test:module": "npm run build && node ./test/module-test.js"
+		"test:module": "deno run -A ./test/module-test.ts"
 	},
 	"imports": {
 		"@std/cli": "jsr:@std/cli@^1.0.7",

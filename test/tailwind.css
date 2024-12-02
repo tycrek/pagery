@@ -11,3 +11,7 @@
 		@apply font-mono;
 	}
 }
+
+[frame=hsides i] {
+	border-style: solid none;
+}
