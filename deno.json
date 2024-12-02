@@ -1,0 +1,29 @@
+{
+	"name": "@tycrek/pagery",
+	"version": "8.0.0-alpha.1",
+	"exports": "./src/pagery.ts",
+	"tasks": {
+		"run": "deno run --allow-env --allow-sys --allow-read --allow-write ./src/pagery.ts"
+	},
+	"imports": {
+		"autoprefixer": "npm:autoprefixer@^10.4.20",
+		"cssnano": "npm:cssnano@^7.0.6",
+		"fs-extra": "npm:fs-extra@^11.2.0",
+		"postcss": "npm:postcss@^8.4.49",
+		"postcss-font-magician": "npm:postcss-font-magician@^4.0.0",
+		"pug": "npm:pug@^3.0.3",
+		"tailwindcss": "npm:tailwindcss@^3.4.15"
+	},
+	"lint": {
+		"rules": {
+			"exclude": [
+				"no-async-promise-executor"
+			]
+		}
+	},
+	"publish": {
+		"exclude": [
+			"test/"
+		]
+	}
+}
