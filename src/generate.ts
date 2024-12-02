@@ -25,7 +25,7 @@ const generateCss = async (options: Options): Promise<{ [key: string]: string }>
 	];
 
 	// User-defined plugins
-	if (options.postcssPlugins.constructor === Array) {
+	if (Array.isArray(options.postcssPlugins)) {
 		for (const plugin of options.postcssPlugins) {
 			// Dynamically import the plugin
 			const importedModule = await import(plugin);
@@ -118,20 +118,17 @@ export const generate = async (options: Options, module = false): Promise<void> 
 		}
 	}
 
-	// Log number of files
-	log.debug(`User data files: ${options.data ? options.data.length : 0}`);
-	log.debug(`Tailwind CSS files: ${options.tailwindFile.length}`);
-
 	// * 2/4: Load data files
 
 	// deno-lint-ignore no-explicit-any
 	const userData: any = {};
 
-	if (options.data && options.data.constructor === Array) {
-		options.data.map((file) => {
+	if (options.data && Array.isArray(options.data)) {
+		for (const file of options.data) {
 			const filename = file.split('/').pop()!.split('.').shift()!;
-			userData[filename] = JSON.parse(Deno.readTextFileSync(file));
-		});
+			userData[filename] = JSON.parse(await Deno.readTextFile(file));
+			log.debug(`[DATA] ${filename}: ${JSON.stringify(userData[filename]).length} bytes`);
+		}
 	}
 
 	// * 3/4: Compile CSS
