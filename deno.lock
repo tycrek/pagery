@@ -1,6 +1,7 @@
 {
   "version": "4",
   "specifiers": {
+    "jsr:@std/path@^1.0.8": "1.0.8",
     "npm:autoprefixer@^10.4.20": "10.4.20_postcss@8.4.49",
     "npm:cssnano@^7.0.6": "7.0.6_postcss@8.4.49",
     "npm:fs-extra@^11.2.0": "11.2.0",
@@ -8,6 +9,11 @@
     "npm:postcss@^8.4.49": "8.4.49",
     "npm:pug@^3.0.3": "3.0.3",
     "npm:tailwindcss@^3.4.15": "3.4.15_postcss@8.4.49"
+  },
+  "jsr": {
+    "@std/path@1.0.8": {
+      "integrity": "548fa456bb6a04d3c1a1e7477986b6cffbce95102d0bb447c67c4ee70e0364be"
+    }
   },
   "npm": {
     "@alloc/quick-lru@5.2.0": {
@@ -1337,6 +1343,7 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@std/path@^1.0.8",
       "npm:autoprefixer@^10.4.20",
       "npm:cssnano@^7.0.6",
       "npm:fs-extra@^11.2.0",

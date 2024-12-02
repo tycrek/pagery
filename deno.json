@@ -7,6 +7,7 @@
 		"run": "deno run -A --watch src/Pagery.ts"
 	},
 	"imports": {
+		"@std/path": "jsr:@std/path@^1.0.8",
 		"autoprefixer": "npm:autoprefixer@^10.4.20",
 		"cssnano": "npm:cssnano@^7.0.6",
 		"fs-extra": "npm:fs-extra@^11.2.0",
