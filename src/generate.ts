@@ -33,8 +33,8 @@ const generateCss = async (options: Options): Promise<{ [key: string]: string }>
 			// If the module is a PostCSS function, load it
 			if (importedModule.default.postcss && typeof importedModule.default === 'function') {
 				plugins.push(importedModule.default());
-				log.debug(`Loaded PostCSS plugin: ${plugin}`);
-			} else log.warn(`Could not load PostCSS plugin: ${plugin}`);
+				log.debug(`[PostCSS] ${plugin}: success`);
+			} else log.warn(`[PostCSS] ${plugin}: failed`);
 		}
 	}
 
