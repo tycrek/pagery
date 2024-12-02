@@ -18,7 +18,7 @@ const require = createRequire(Deno.mainModule);
 // ! //
 
 const pkg: { name: string, version: string } = fs.readJsonSync(path('deno.json'));
-const log = new Logger(`${pkg.name} v${pkg.version} |`);
+const log = new Logger(`${pkg.name.split('/')[1]} v${pkg.version} |`);
 
 const DEFAULT_OPTIONS: Options = {
 	views: 'views/',
