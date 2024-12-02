@@ -5,7 +5,7 @@
 	"exports": "./src/Pagery.ts",
 	"tasks": {
 		"test:blank": "deno run -A src/Pagery.ts",
-		"test:cli": "deno run -A src/Pagery.ts --dir=test --data=meta.json,foo.json,iter.json --exclude=head.pug,notme.pug --tailwindFile=tailwind.css,tailwind.2.css --postcssPlugins=npm:postcss-attribute-case-insensitive,npm:postcss-for,npm:postcss-each,npm:postcss-reporter",
+		"test:cli": "deno run -A src/Pagery.ts --dir=test --data=meta.json,foo.json,iter.json --exclude=head.pug,notme.pug --tailwindFile=tailwind.css,tailwind.2.css --postcssPlugins=npm:postcss-attribute-case-insensitive,npm:postcss-for,npm:postcss-each",
 		"test:config": "deno run -A src/Pagery.ts --config=test/pagery.config.json",
 		"test:module": "deno run -A ./test/module-test.ts"
 	},
@@ -18,6 +18,7 @@
 		"fs-extra": "npm:fs-extra@^11.2.0",
 		"postcss": "npm:postcss@^8.4.49",
 		"postcss-font-magician": "npm:postcss-font-magician@^4.0.0",
+		"postcss-reporter": "npm:postcss-reporter@^7.1.0",
 		"pug": "npm:pug@^3.0.3",
 		"tailwindcss": "npm:tailwindcss@^3.4.15"
 	},

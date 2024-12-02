@@ -6,6 +6,7 @@ import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
 import cssnano from 'cssnano';
 import fontMagic from 'postcss-font-magician';
+import reporter from 'postcss-reporter';
 
 import { arrayify, log } from './utils.ts';
 import type { Options } from './Options.ts';
@@ -19,7 +20,7 @@ const generateCss = async (options: Options): Promise<{ [key: string]: string }>
 	const plugins = [
 		tailwindcss({ config: options.tailwindConfigFile }),
 		autoprefixer(),
-		cssnano(),
+		cssnano({ preset: 'default' }),
 		fontMagic({ protocol: 'https:' }),
 	];
 
@@ -36,6 +37,9 @@ const generateCss = async (options: Options): Promise<{ [key: string]: string }>
 			} else log.warn(`Could not load PostCSS plugin: ${plugin}`);
 		}
 	}
+
+	// Append postcss-reporter to plugins list (must be last)
+	plugins.push(reporter());
 
 	// PostCSS compiler
 	const compileCss = async (filepath: string) => {

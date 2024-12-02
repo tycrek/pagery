@@ -16,8 +16,7 @@
 	"postcssPlugins": [
 		"npm:postcss-attribute-case-insensitive",
 		"npm:postcss-for",
-		"npm:postcss-each",
-		"npm:postcss-reporter"
+		"npm:postcss-each"
 	],
 	"output": "html-config/"
 }
