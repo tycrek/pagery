@@ -35,6 +35,7 @@
 		"indentWidth": 4,
 		"semiColons": true,
 		"singleQuote": true,
+		"lineWidth": 120,
 		"exclude": [
 			"src/pagery.ts",
 			"src/Log.ts"
