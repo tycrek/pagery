@@ -1,7 +1,7 @@
 {
 	"name": "@tycrek/pagery",
 	"license": "ISC",
-	"version": "8.0.0-alpha.3",
+	"version": "8.0.0-alpha.4",
 	"exports": "./src/pagery.ts",
 	"tasks": {
 		"test:blank": "deno run -A src/Pagery.ts",
