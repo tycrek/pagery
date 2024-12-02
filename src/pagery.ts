@@ -16,7 +16,7 @@ const path = (...args: string[]) => Path.join(Deno.cwd(), ...args);
 const require = createRequire(Deno.mainModule);
 // ! //
 
-const pkg: { name: string, version: string } = fs.readJsonSync(path('deno.json'));
+import pkg from '../deno.json' with { type: 'json' };
 const log = new Logger(`${pkg.name.split('/')[1]} v${pkg.version} |`);
 
 const DEFAULT_OPTIONS: Options = {
@@ -31,6 +31,7 @@ const DEFAULT_OPTIONS: Options = {
 /**
  * Generic error printer
  */
+// deno-lint-ignore no-explicit-any
 const errorPrint = (err: any) => (console.log(err), log.error(err), Deno.exit(1));
 
 /**
@@ -126,7 +127,7 @@ const css = (options: Options): Promise<{ [key: string]: string }> => new Promis
 	const compileCss = (filepath: string) =>
 		fs.readFile(filepath)
 			.then((bytes: string) => postcss(plugins).process(bytes, { from: filepath, to: filepath }))
-			.then((result: { warnings?: any, css?: string }) => {
+			.then((result: { warnings?: any, css: string }) => {
 				if (result.warnings && result.warnings().length) throw new Error(result.warnings().join(', '));
 				return result.css;
 			});
