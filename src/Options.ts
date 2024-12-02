@@ -42,3 +42,12 @@ export interface ConfigFile {
 	exclude?: string | string[];
 	only?: string | string[];
 }
+
+export const DEFAULT_OPTIONS: Options = {
+	views: 'views/',
+	output: 'html/',
+	tailwindFile: 'tailwind.css',
+	tailwindConfigFile: 'tailwind.config.js',
+	outputCss: true,
+	postcssPlugins: [],
+};
