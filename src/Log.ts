@@ -18,7 +18,7 @@ export default class Log {
 	}
 
 	// deno-lint-ignore no-explicit-any
-	private log(func: ((...data: any[]) => void), message: string) {
+	private log(func: (...data: any[]) => void, message: string) {
 		if (!this.enabled) return;
 		func(`${CLI_COLOURS.grey}${this.prefix}${CLI_COLOURS.RESET} ${message}${CLI_COLOURS.RESET}`);
 	}

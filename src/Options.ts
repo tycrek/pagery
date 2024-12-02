@@ -36,15 +36,14 @@ export const DEFAULT_OPTIONS: Options = {
 	views: 'views/',
 	output: 'html/',
 	tailwindFile: 'tailwind.css',
-	tailwindConfigFile: 'tailwind.config.js',
+	tailwindConfigFile: 'tailwind.config.ts',
 	outputCss: true,
 	postcssPlugins: [],
 };
 
-const defaultsAsRecord: Record<string, string | number> = Object.entries(
-	DEFAULT_OPTIONS,
-).reduce((acc, [key, value]) => {
-	acc[key] = value;
-	return acc;
-}, {} as Record<string, string | number>);
+const defaultsAsRecord: Record<string, string | number> = Object.entries(DEFAULT_OPTIONS)
+	.reduce((acc, [key, value]) => {
+		acc[key] = value;
+		return acc;
+	}, {} as Record<string, string | number>);
 export const DEFAULT_OPTIONS_RECORD = defaultsAsRecord;

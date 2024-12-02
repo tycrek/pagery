@@ -3,6 +3,7 @@
 	"version": "8.0.0-alpha.3",
 	"exports": "./src/pagery.ts",
 	"tasks": {
+		"test:blank": "deno run -A src/Pagery.ts",
 		"test:cli": "deno run -A src/Pagery.ts --dir=test --data=meta.json,foo.json,iter.json --exclude=head.pug,notme.pug --tailwindFile=tailwind.css,tailwind.2.css",
 		"test:config": "deno run -A src/Pagery.ts --config=test/pagery.config.json",
 		"test:modulex": "deno run -A ./test/module-test.ts",
@@ -24,25 +25,19 @@
 		"pug": "npm:pug@^3.0.3",
 		"tailwindcss": "npm:tailwindcss@^3.4.15"
 	},
-	"lint": {
-		"exclude": ["src/old_pagery.ts"]
-	},
 	"fmt": {
 		"useTabs": true,
 		"indentWidth": 4,
 		"semiColons": true,
 		"singleQuote": true,
-		"lineWidth": 120,
-		"exclude": [
-			"src/pagery.ts",
-			"src/Log.ts"
-		]
+		"lineWidth": 120
 	},
 	"exclude": [
 		".vscode/",
 		"test/",
 		"views/",
 		"tailwind.css",
-		"tailwind.config.*"
+		"tailwind.config.*",
+		"src/old_pagery.ts"
 	]
 }
