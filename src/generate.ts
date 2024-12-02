@@ -1,19 +1,71 @@
 import { ensureDir, exists } from '@std/fs';
 
-// import pug from 'pug';
-// import postcss from 'postcss';
-// import * as tailwindcss from 'tailwindcss';
-// import * as autoprefixer from 'autoprefixer';
-// import * as cssnano from 'cssnano';
-// import fontMagic from 'postcss-font-magician';
+import pug from 'pug';
+import postcss from 'postcss';
+import tailwindcss from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
+import cssnano from 'cssnano';
+import fontMagic from 'postcss-font-magician';
 
 import { arrayify, log } from './utils.ts';
 import type { Options } from './Options.ts';
 import { Errors } from './utils.ts';
 
-const compileCss = (options: Options): Promise<{ [key: string]: string }> => {
+/**
+ * CSS generator
+ */
+const generateCss = async (options: Options): Promise<{ [key: string]: string }> => {
+	// Load included plugins
+	const plugins = [
+		tailwindcss({ config: options.tailwindConfigFile }),
+		autoprefixer(),
+		cssnano(),
+		fontMagic({ protocol: 'https:' }),
+	];
 
-	return Promise.resolve({});
+	// User-defined plugins
+	if (options.postcssPlugins.constructor === Array) {
+		for (const plugin of options.postcssPlugins) {
+			// Dynamically import the plugin
+			const importedModule = await import(plugin);
+
+			// If the module is a PostCSS function, load it
+			if (importedModule.default.postcss && typeof importedModule.default === 'function') {
+				plugins.push(importedModule.default());
+				log.debug(`Loaded PostCSS plugin: ${plugin}`);
+			} else log.warn(`Could not load PostCSS plugin: ${plugin}`);
+		}
+	}
+
+	// PostCSS compiler
+	const compileCss = async (filepath: string) => {
+		// Process input file
+		const results = await postcss(plugins).process(await Deno.readTextFile(filepath), {
+			from: filepath,
+			to: filepath,
+		});
+
+		// Check warnings
+		let warned = false;
+		for (const warn of results.warnings()) {
+			log.warn(warn.toString());
+			warned = true;
+		}
+		if (warned) await new Promise((r) => setTimeout(r, 3E3));
+
+		return results.toString();
+	};
+
+	// Compile all CSS files
+	const css: { [key: string]: string } = {};
+	for (const file of options.tailwindFile) {
+		const data = await compileCss(file);
+		const key = file.match(/^(.*)(?=\.)/g)![0];
+		css[key] = data;
+		log.info(`[CSS] ${key}: ${data.length} bytes`);
+	}
+
+	return Promise.resolve(css);
 };
 
 export const generate = async (options: Options, module = false): Promise<void> => {
@@ -80,7 +132,7 @@ export const generate = async (options: Options, module = false): Promise<void> 
 
 	// * 3/4: Compile CSS
 
-	const cssData = await compileCss(options);
+	const cssData = await generateCss(options);
 	if (options.outputCss) {
 		await ensureDir(`${options.output}/css/`);
 		for (const [filename, contents] of Object.entries(cssData)) {
