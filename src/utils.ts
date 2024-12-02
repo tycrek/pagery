@@ -35,4 +35,6 @@ export const arrayify = (input: string | string[]) => (typeof input === 'string'
 export const Errors = {
 	FileNotFound: (file: string) =>
 		new PageryError(`File not found: ${file}`, 'Create this file or remove it from the configuration.'),
+	NoPugFiles: (dir: string) =>
+		new PageryError(`No .pug files found in ${dir}`, 'Create at least one .pug file in this directory.'),
 };
