@@ -51,3 +51,11 @@ export const DEFAULT_OPTIONS: Options = {
 	outputCss: true,
 	postcssPlugins: [],
 };
+
+const defaultsAsRecord: Record<string, string | number> = Object.entries(
+	DEFAULT_OPTIONS,
+).reduce((acc, [key, value]) => {
+	acc[key] = value;
+	return acc;
+}, {} as Record<string, string | number>);
+export const DEFAULT_OPTIONS_RECORD = defaultsAsRecord;
