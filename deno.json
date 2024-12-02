@@ -21,13 +21,21 @@
 			]
 		}
 	},
-	"publish": {
+	"fmt": {
+		"useTabs": true,
+		"indentWidth": 4,
+		"semiColons": true,
+		"singleQuote": true,
 		"exclude": [
-			"test/",
-			"views/",
-			"tailwind.css",
-			"tailwind.config.*",
-			".vscode/"
+			"src/pagery.ts",
+			"src/Log.ts"
 		]
-	}
+	},
+	"exclude": [
+		".vscode/",
+		"test/",
+		"views/",
+		"tailwind.css",
+		"tailwind.config.*"
+	]
 }
