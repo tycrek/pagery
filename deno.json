@@ -24,11 +24,7 @@
 		"tailwindcss": "npm:tailwindcss@^3.4.15"
 	},
 	"lint": {
-		"rules": {
-			"exclude": [
-				"no-async-promise-executor"
-			]
-		}
+		"exclude": ["src/old_pagery.ts"]
 	},
 	"fmt": {
 		"useTabs": true,
