@@ -1,8 +1,8 @@
 import { parseArgs } from '@std/cli/parse-args';
 
 import { DEFAULT_OPTIONS, DEFAULT_OPTIONS_RECORD } from './Options.ts';
-import { generateAll } from './generate.ts';
-import { join, log } from './utils.ts';
+import { generate } from './generate.ts';
+import { chdir, errorPrint, join, log } from './utils.ts';
 import type { Options } from './Options.ts';
 
 // * Check if running via CLI
@@ -22,7 +22,7 @@ if (import.meta.main) {
 
 	const processArgs = (opts: Options): Options => {
 		// Change directory if needed
-		if (opts.dir) Deno.chdir(opts.dir);
+		if (opts.dir) chdir(opts.dir);
 
 		// Use absolute paths
 		opts.views = join(opts.views);
@@ -48,7 +48,9 @@ if (import.meta.main) {
 		return opts;
 	};
 
-	generateAll(processArgs(args.config ? processFileDefaults(join(args.config)) : args));
+	generate(processArgs(args.config ? processFileDefaults(join(args.config)) : args))
+		.then(() => log.success('Complete'))
+		.catch(errorPrint);
 } else {
 	log.error('Module not yet implemented, please use CLI');
 	Deno.exit(1);
