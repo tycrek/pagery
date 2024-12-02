@@ -29,6 +29,7 @@
 		"lineWidth": 120
 	},
 	"exclude": [
+		".gitattributes",
 		".vscode/",
 		"test/",
 		"views/",
