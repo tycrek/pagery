@@ -7,7 +7,7 @@ import postcss from 'postcss';
 import pug from 'pug';
 import fs from 'fs-extra';
 
-import { Logger } from './logger.ts';
+import { Log } from './Log.ts';
 import type { Options, ConfigFile } from './Options.ts';
 import { PageryError } from './PageryError.ts';
 
@@ -17,7 +17,7 @@ const require = createRequire(Deno.mainModule);
 // ! //
 
 import pkg from '../deno.json' with { type: 'json' };
-const log = new Logger(`${pkg.name.split('/')[1]} v${pkg.version} |`);
+const log = new Log(`${pkg.name.split('/')[1]} v${pkg.version} |`);
 
 const DEFAULT_OPTIONS: Options = {
 	views: 'views/',

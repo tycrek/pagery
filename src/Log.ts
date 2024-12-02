@@ -9,7 +9,7 @@ export const CLI_COLOURS = {
 	RESET: '\x1b[0m',
 };
 
-export class Logger {
+export class Log {
 	private prefix: string;
 	private enabled: boolean = true;
 
