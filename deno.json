@@ -3,10 +3,17 @@
 	"version": "8.0.0-alpha.3",
 	"exports": "./src/pagery.ts",
 	"tasks": {
+		"test:cli": "deno run -A src/Pagery.ts --dir=test --data=meta.json,foo.json,iter.json --exclude=head.pug,notme.pug --tailwindFile=tailwind.css,tailwind.2.css",
+		"test:config": "deno run -A src/Pagery.ts --config=test/pagery.config.json",
+		"test:modulex": "deno run -A ./test/module-test.ts",
 		"old": "deno run --allow-env --allow-sys --allow-read --allow-write ./src/pagery.ts",
-		"run": "deno run -A --watch src/Pagery.ts"
+		"old:test": "npm run test:cli && npm run test:config && npm run test:module",
+		"old:test:cli": "npm run build && node ./dist/pagery.js --dir=test --data=meta.json,foo.json,iter.json --exclude=head.pug,notme.pug --tailwindFile=tailwind.css,tailwind.2.css",
+		"old:test:config": "npm run build && node ./dist/pagery.js --config=test/pagery.config.json",
+		"old:test:module": "npm run build && node ./test/module-test.js"
 	},
 	"imports": {
+		"@std/cli": "jsr:@std/cli@^1.0.7",
 		"@std/path": "jsr:@std/path@^1.0.8",
 		"autoprefixer": "npm:autoprefixer@^10.4.20",
 		"cssnano": "npm:cssnano@^7.0.6",
