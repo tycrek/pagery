@@ -14,7 +14,7 @@ import { PageryError } from './PageryError.ts';
 
 // ! Legacy normalizations
 const path = (...args: string[]) => Path.join(process.cwd(), ...args);
-const require = createRequire(import.meta.url);
+const require = createRequire(Deno.mainModule);
 // ! //
 
 const pkg: { name: string, version: string } = fs.readJsonSync(path('deno.json'));
@@ -349,7 +349,7 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 });
 
 // * Check if being run on the command line
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.main) {
 
 	/*
 	 * Parse command line arguments

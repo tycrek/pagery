@@ -1,6 +1,6 @@
 {
 	"name": "@tycrek/pagery",
-	"version": "8.0.0-alpha.1",
+	"version": "8.0.0-alpha.2",
 	"exports": "./src/pagery.ts",
 	"tasks": {
 		"run": "deno run --allow-env --allow-sys --allow-read --allow-write ./src/pagery.ts"
