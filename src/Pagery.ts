@@ -1,15 +1,9 @@
-import pkg from '../deno.json' with { type: 'json' };
-
-import * as path from '@std/path';
 import { parseArgs } from '@std/cli/parse-args';
 
-import Log from './Log.ts';
 import { DEFAULT_OPTIONS, DEFAULT_OPTIONS_RECORD } from './Options.ts';
 import { generateAll } from './generate.ts';
+import { join, log } from './utils.ts';
 import type { Options } from './Options.ts';
-
-export const log = new Log(`${pkg.name.split('/')[1]} v${pkg.version} |`);
-export const join = (...args: string[]) => path.join(Deno.cwd(), ...args);
 
 // * Check if running via CLI
 if (import.meta.main) {
