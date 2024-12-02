@@ -2,7 +2,7 @@ import { parseArgs } from '@std/cli/parse-args';
 
 import { DEFAULT_OPTIONS, DEFAULT_OPTIONS_RECORD } from './Options.ts';
 import { generate } from './generate.ts';
-import { chdir, errorPrint, join, log } from './utils.ts';
+import { arrayify, chdir, errorPrint, join, log } from './utils.ts';
 import type { Options } from './Options.ts';
 
 // * Check if running via CLI
@@ -28,21 +28,21 @@ if (import.meta.main) {
 		opts.views = join(opts.views);
 		opts.output = join(opts.output);
 
+		// Types that should be an array
+		const arrayFields: ('tailwindFile' | 'postcssPlugins' | 'data' | 'exclude' | 'only')[] = [
+			'tailwindFile',
+			'postcssPlugins',
+			'data',
+			'exclude',
+			'only',
+		];
+
 		// Parse array types
-		if (typeof opts.tailwindFile === 'string') {
-			opts.tailwindFile = opts.tailwindFile.split(',');
-		}
-		if (typeof opts.postcssPlugins === 'string') {
-			opts.postcssPlugins = opts.postcssPlugins.split(',');
-		}
-		if (typeof opts.data === 'string') {
-			opts.data = opts.data.split(',');
-		}
-		if (typeof opts.exclude === 'string') {
-			opts.exclude = opts.exclude.split(',');
-		}
-		if (typeof opts.only === 'string') {
-			opts.only = opts.only.split(',');
+		for (const field of arrayFields) {
+			if (opts[field] == '' || opts[field] == null) continue;
+			if (typeof opts[field] === 'string') {
+				opts[field] = arrayify(opts[field].split(','));
+			}
 		}
 
 		return opts;
