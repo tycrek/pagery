@@ -34,6 +34,7 @@
 	},
 	"exclude": [
 		".gitattributes",
+		".gitignore",
 		".vscode/",
 		"test/",
 		"views/",
