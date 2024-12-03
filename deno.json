@@ -27,7 +27,10 @@
 		"indentWidth": 4,
 		"semiColons": true,
 		"singleQuote": true,
-		"lineWidth": 120
+		"lineWidth": 120,
+		"exclude": [
+			"README.md"
+		]
 	},
 	"exclude": [
 		".gitattributes",
