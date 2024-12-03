@@ -1,4 +1,4 @@
-import { ensureDir, exists } from '@std/fs';
+import { ensureDir, ensureFile, exists } from '@std/fs';
 
 import pug from 'pug';
 import postcss from 'postcss';
@@ -72,7 +72,98 @@ const generateCss = async (options: Options): Promise<{ [key: string]: string }>
 	return Promise.resolve(css);
 };
 
-const generatePug = async (options: Options): Promise<void> => {
+const generatePug = async (
+	options: Options,
+	userData: { [key: string]: JSON },
+	cssData: { [key: string]: string },
+): Promise<{ [key: string]: string }> => {
+	// Iteration structure
+	interface IterationFile {
+		source: string;
+		iterData: JSON;
+	}
+
+	// Iteration Data
+	const Iterations: { list: IterationFile[]; build: (file: Deno.DirEntry, root: string) => IterationFile } = {
+		list: [],
+		build: (file, root) => {
+			// Get iteration name
+			const iterationName = file.name.replaceAll(/[\[\]]|\.pug/g, '');
+
+			// Build an Iteration
+			return ({
+				source: `${root}/${file.name}`,
+				iterData: iterationName.includes(',')
+					? (() => {
+						const split = iterationName.split(','); // Get the data key (first element) and optional property keys
+						const prop = split.slice(1); // Get property keys, if any
+
+						// Get nested property data from a key such as [file,one,two]
+						let d = userData[split[0]];
+						for (const p of prop) {
+							// @ts-ignore:7053
+							d = d[p.replaceAll(/[\[\]]/g, '')];
+						}
+						return d;
+					})()
+					: userData[iterationName], // If no property keys, just the data key
+			});
+		},
+	};
+
+	// Recusively get all Pug files in the provided directory
+	const dogWalk = async (root: string, sub = false): Promise<string[]> => {
+		const isPug = (file: Deno.DirEntry) => file.isFile && file.name.endsWith('.pug');
+
+		const dir = Deno.readDirSync(root);
+		const files = Array.from(dir);
+
+		// Set up iterator
+		const pugFiles: string[] = [];
+		for (
+			const file of files
+				.filter((file) => !options.exclude?.includes(file.name))
+				.filter((file) => (options.only?.length ?? 0) > 0 ? options.only?.includes(file.name) : true)
+		) {
+			// Directories should be recursively checked
+			if (file.isDirectory) {
+				pugFiles.push(...(await dogWalk(`${root}/${file.name}`, true)));
+			} // Otherwise get a list of Pug files
+			else if (isPug(file) && !file.name.includes('[')) {
+				pugFiles.push(`${sub ? root.replace(options.views, '') : ''}/${file.name.replace('.pug', '')}`);
+			} // Or build an Iteration
+			else if (isPug(file) && file.name.includes('[') && file.name.includes(']')) {
+				Iterations.list.push(Iterations.build(file, root));
+			}
+		}
+		return Promise.resolve(pugFiles);
+	};
+
+	// Generate list of files to render (also populates Iterations.list)
+	const files = await dogWalk(options.views);
+
+	// Pug renderer
+	const pugData: { [key: string]: string } = {};
+	const render = async (file: string, pugFile: string, data = userData) => {
+		pugData[file] = await pug.renderFile(pugFile, { css: cssData, data });
+		log.info(`[PUG] ${file}`);
+	};
+
+	// Process regular Pug files
+	await Promise.all(files.map((file) => render(file, `${options.views}${file}.pug`)));
+
+	// Process Iterations
+	const iterations: Promise<void>[] = [];
+	for (const iter of Iterations.list) {
+		Object.entries(iter.iterData).forEach(([key, entry]) => {
+			const file = `${iter.source.replace(options.views, '').replace(/\[(.*)\]\.pug/, key)}`;
+			// todo: merge userData with entry (data)
+			iterations.push(render(file, iter.source, entry));
+		});
+	}
+	await Promise.all(iterations);
+
+	return Promise.resolve(pugData);
 };
 
 export const generate = async (options: Options, module = false): Promise<void> => {
@@ -128,7 +219,6 @@ export const generate = async (options: Options, module = false): Promise<void> 
 		for (const file of options.data) {
 			const filename = file.split('/').pop()!.split('.').shift()!;
 			userData[filename] = JSON.parse(await Deno.readTextFile(file));
-			log.debug(`[DATA] ${filename}: ${JSON.stringify(userData[filename]).length} bytes`);
 		}
 	}
 
@@ -146,8 +236,12 @@ export const generate = async (options: Options, module = false): Promise<void> 
 	/*
 	 * 4/4: Render Pug
 	 */
-	const pugData: { [key: string]: string } = {};
-	log.warn('[PUG] WIP: not yet implemented');
+	const pugData = await generatePug(options, userData, cssData);
+	for (const [filename, contents] of Object.entries(pugData)) {
+		const htmlFile = `${options.output}${filename}.html`;
+		await ensureFile(htmlFile);
+		await Deno.writeTextFile(htmlFile, contents);
+	}
 
 	return Promise.resolve(void 0);
 };
