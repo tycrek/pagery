@@ -44,13 +44,13 @@ Since version 8.0.0, pagery runs on [Deno 2.0](https://deno.com/blog/v2.0) rathe
 You can run pagery in your current directory without explicitly installing it:
 
 ```bash
-deno run -A jsr:@tycrek/pagery@8.0.0
+deno run -A jsr:@tycrek/pagery
 ```
 
 Or, you can install globally:
 
 ```bash
-deno install -gAf jsr:@tycrek/pagery@8.0.0
+deno install -gAf jsr:@tycrek/pagery
 ```
 
 ## Usage
