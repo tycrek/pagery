@@ -8,7 +8,7 @@
 
 </div>
 
-[JSR badge]: https://jsr.io/badges/@tycrek/
+[JSR badge]: https://jsr.io/badges/@tycrek/pagery
 [JSR link]: https://jsr.io/@tycrek/pagery
 
 ## What is pagery?
