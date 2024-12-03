@@ -147,6 +147,7 @@ export const generate = async (options: Options, module = false): Promise<void> 
 	 * 4/4: Render Pug
 	 */
 	const pugData: { [key: string]: string } = {};
+	log.warn('[PUG] WIP: not yet implemented');
 
 	return Promise.resolve(void 0);
 };
