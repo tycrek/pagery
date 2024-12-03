@@ -9,7 +9,7 @@ export const CLI_COLOURS = {
 	RESET: '\x1b[0m',
 };
 
-export class Logger {
+export default class Log {
 	private prefix: string;
 	private enabled: boolean = true;
 
@@ -17,7 +17,8 @@ export class Logger {
 		this.prefix = prefix;
 	}
 
-	private log(func: Function, message: string) {
+	// deno-lint-ignore no-explicit-any
+	private log(func: (...data: any[]) => void, message: string) {
 		if (!this.enabled) return;
 		func(`${CLI_COLOURS.grey}${this.prefix}${CLI_COLOURS.RESET} ${message}${CLI_COLOURS.RESET}`);
 	}

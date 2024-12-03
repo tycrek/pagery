@@ -1,0 +1,45 @@
+{
+	"name": "@tycrek/pagery",
+	"license": "ISC",
+	"version": "8.0.0",
+	"exports": "./src/Pagery.ts",
+	"tasks": {
+		"test:blank": "deno run -A src/Pagery.ts",
+		"test:cli": "deno run -A src/Pagery.ts --dir=test --data=meta.json,foo.json,iter.json --exclude=head.pug,notme.pug --tailwindFile=tailwind.css,tailwind.2.css --postcssPlugins=npm:postcss-attribute-case-insensitive,npm:postcss-for,npm:postcss-each",
+		"test:config": "deno run -A src/Pagery.ts --config=test/pagery.config.json",
+		"test:module": "deno run -A ./test/module-test.ts"
+	},
+	"imports": {
+		"@std/cli": "jsr:@std/cli@^1.0.7",
+		"@std/fs": "jsr:@std/fs@^1.0.6",
+		"@std/path": "jsr:@std/path@^1.0.8",
+		"autoprefixer": "npm:autoprefixer@^10.4.20",
+		"cssnano": "npm:cssnano@^7.0.6",
+		"fs-extra": "npm:fs-extra@^11.2.0",
+		"postcss": "npm:postcss@^8.4.49",
+		"postcss-font-magician": "npm:postcss-font-magician@^4.0.0",
+		"postcss-reporter": "npm:postcss-reporter@^7.1.0",
+		"pug": "npm:pug@^3.0.3",
+		"tailwindcss": "npm:tailwindcss@^3.4.15"
+	},
+	"fmt": {
+		"useTabs": true,
+		"indentWidth": 4,
+		"semiColons": true,
+		"singleQuote": true,
+		"lineWidth": 120,
+		"exclude": [
+			"README.md"
+		]
+	},
+	"exclude": [
+		".gitattributes",
+		".vscode/",
+		"test/",
+		"views/",
+		"tailwind.css",
+		"tailwind.config.*",
+		"src/old_pagery.ts"
+	],
+	"lock": false
+}

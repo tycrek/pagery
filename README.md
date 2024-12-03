@@ -1,24 +1,21 @@
-[//]: # (NPM centered badge template START --------------------------------------------------)
-
 <div align="center">
 
-pagery
-===
+# pagery
 
-[![NPMCBT badge]][NPMCBT link]
+[![JSR badge]][JSR link]
 
 *Opinionated static site generator*
 
 </div>
 
-[NPMCBT badge]: https://img.shields.io/npm/v/pagery?color=CB3837&label=%20View%20on%20NPM&logo=npm&style=for-the-badge
-[NPMCBT link]: https://www.npmjs.com/package/pagery
-
-[//]: # (NPM centered badge template END ----------------------------------------------------)
+[JSR badge]: https://jsr.io/badges/@tycrek/pagery
+[JSR link]: https://jsr.io/@tycrek/pagery
 
 ## What is pagery?
 
 pagery is my personal static site generator, primarily to be used with [Cloudflare Pages](https://pages.cloudflare.com/). Be aware: it is an extremely opinionated tool, using my really niche stack. I wrote this for myself but maybe someone else can see the benefits in the simplicity of my stack. Plus it's got some cool features.
+
+**v8.0.0 now uses Deno 2.0!**
 
 ### The stack
 
@@ -27,49 +24,40 @@ pagery is my personal static site generator, primarily to be used with [Cloudfla
 | [Pug](https://pugjs.org/) | HTML templating |
 | [Tailwind CSS](https://tailwindcss.com/) | Page styling |
 | [PostCSS](https://postcss.org/) | CSS processing |
-| [JSON](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/JSON) | Structured data |
+| JSON | Structured data |
 
 ### Features
 
 - Super-simple templating
 - Compatible with Cloudflare Pages (or any other [JAMstack](https://www.cloudflare.com/en-ca/learning/performance/what-is-jamstack/) host)
 - Iteratively generate pages from JSON
-- Included PostCSS plugins:
-   - [autoprefixer](https://npmjs.com/package/autoprefixer)
-   - [cssnano](https://cssnano.co/)
-   - [@tinycreek/postcss-font-magician](https://www.npmjs.com/package/@tinycreek/postcss-font-magician)
+- Includes these PostCSS plugins:
+   - [autoprefixer](https://github.com/postcss/autoprefixer#readme)
+   - [cssnano](https://cssnano.github.io/cssnano/)
+   - [postcss-font-magician](https://github.com/csstools/postcss-font-magician#readme)
+   - [postcss-reporter](https://github.com/postcss/postcss-reporter#readme)
 
 ## Installation
 
-**`npx pagery`** is the suggested way to use pagery. Alternatively, you can explicitly install it:
+Since version 8.0.0, pagery runs on [Deno 2.0](https://deno.com/blog/v2.0) rather than Node.js. Make sure you have Deno [installed](https://docs.deno.com/runtime/getting_started/installation/) before using pagery.
+
+You can run pagery in your current directory without explicitly installing it:
 
 ```bash
-npm i -g pagery
-
-# or, per project
-npm i pagery
+deno run -A jsr:@tycrek/pagery@8.0.0
 ```
 
-If you install per project, I suggest including this script in your `package.json`:
+Or, you can install globally:
 
-```jsonc
-{
-    "scripts": {
-        "pagery": "node ./node_modules/pagery/dist/pagery.js"
-    },
-    // ...
-}
+```bash
+deno install -gAf jsr:@tycrek/pagery@8.0.0
 ```
-
-Then run it with `npm run pagery`.
-
-###### It is recommended to be using at least Node 20 and NPM 10.
 
 ## Usage
 
 ### Step 1: Setup Tailwind
 
-Create two new files, `tailwind.config.js` and `tailwind.css` in the root of your project. See [Tailwind CSS docs: Configuration](https://tailwindcss.com/docs/configuration) for `tailwind.config.js`. You may also use a `.ts`, check [Tailwind docs](https://tailwindcss.com/docs/configuration#using-esm-or-type-script) for more info.
+Create two new files, `tailwind.config.ts` and `tailwind.css` in the root of your project. See [Tailwind CSS docs: Configuration](https://tailwindcss.com/docs/configuration#using-esm-or-type-script) for `tailwind.config.ts`.
 
 Add the following to `tailwind.css`:
 
@@ -126,12 +114,20 @@ button.bg-red-500.text-white(onclick='alert("Hello world!")') Click me!
 
 Tailwind uses `:` by default to indicate modifiers. This is a problem in Pug, so it's recommended to do the following:
 
-```js
-// tailwind.config.js
-module.exports = {
+```ts
+// tailwind.config.ts
+import { Config } from 'tailwindcss';
+
+export default {
     separator: '_',
-    // ...
-}
+    plugins: [],
+    content: ['./views/**/*.pug'],
+    theme: {
+        extend: {
+            //...
+        }
+    }
+} satisfies Config;
 ```
 
 ```pug
@@ -179,6 +175,9 @@ Your HTML would render as:
 Once the project is setup, you can run pagery with the following command:
 
 ```bash
+deno run -A jsr:@tycrek/pagery
+
+# or, if installed globally:
 pagery
 ```
 
@@ -192,14 +191,16 @@ This will compile your Pug files into HTML in the `html/` directory.
 | `views` | Directory where your Pug files are located | `views/` |
 | `output` | Directory where the compiled HTML files will be placed | `html/` |
 | `tailwindFile` | Path to your Tailwind CSS file(s) | `tailwind.css` |
-| `tailwindConfigFile` | Path to your Tailwind config file | `tailwind.config.js`/`.ts` |
+| `tailwindConfigFile` | Path to your Tailwind config file | `tailwind.config.ts` |
 | `outputCss` | Save compiled CSS to file | `true` |
+| `postcssPlugins` | Comma-separated list of additional PostCSS pagery should load.\nMake sure to prefix packages with the correct repository (i.e. `npm:postcss-each`) | `[]` |
 | `dir` | Directory to run pagery in | `./` |
 | `data` | Path to JSON file(s) containing data to pass to Pug files | `null` |
 | `exclude` | Comma-separated list of Pug files or directories to exclude from the output | `null` |
 | `only` | Comma-separated list of Pug files to explicity render | `null` |
+| `` |
 
-All options can be set on the command line (for example, `--output=static/`), in a JSON config file (must be referenced using `--config=file.json`), or when used as a JS module.
+All options can be set on the command line (for example, `--output=static/`), in a JSON config file (must be referenced using `--config=file.json`), or when used as a module.
 
 **Example:**
 
@@ -211,7 +212,7 @@ pagery --dir=public/ --data=language.json --tailwindFile=css/main.css,css/admin.
 
 #### Using a config file
 
-By specifying the **`--config`** flag, as well as a `.json` file, pagery will ignore all other command line options and instead use the options specified in the config file.
+By specifying a config file with **`--config=filename.json`**, pagery will ignore all other command line options and instead use the values provided by the config file.
 
 The config file supports all the same options as the command line, except for `--config` itself. For example:
 
@@ -228,28 +229,30 @@ The config file supports all the same options as the command line, except for `-
 This would be the same as running:
 
 ```bash
-npm run pagery --views=pug/ --output=public/ --dir=website/ --data=language.json --tailwindFile=css/main.css,css/admin.css
+pagery --views=pug/ --output=public/ --dir=website/ --data=language.json --tailwindFile=css/main.css,css/admin.css
 ```
 
-#### Importing as a module
+#### Importing as a module (*out-of-date*)
 
 You can also import pagery as a module and use it in your own scripts for dynamic server-side rendering. For example:
 
-```js
-const { generate } = require('pagery');
+```ts
+import pagery from 'pagery';
 
-generate({
-    views: 'pug/',
-    output: 'public/',
-    dir: 'website/',
-    data: 'language.json',
-    tailwindFile: 'css/main.css,css/admin.css'
-})
-    .then((data) => {
-        console.log(`HTML files: ${Object.keys(data.pug).length}`);
-        console.log(`CSS files: ${data.css instanceof Array ? data.css.length : 1}`);
-    })
-    .catch((err) => console.error(err));
+/* this is out of date and will be updated soon */
+
+//generate({
+//    views: 'pug/',
+//    output: 'public/',
+//    dir: 'website/',
+//    data: 'language.json',
+//    tailwindFile: 'css/main.css,css/admin.css'
+//})
+//    .then((data) => {
+//        console.log(`HTML files: ${Object.keys(data.pug).length}`);
+//        console.log(`CSS files: ${data.css instanceof Array ? data.css.length : 1}`);
+//    })
+//    .catch((err) => console.error(err));
 ```
 
 #### Iteration Generation
@@ -289,4 +292,4 @@ The data provided to an Iteration must be in Object form: the Object key becomes
 
 Licensed under [ISC](https://github.com/tycrek/pagery/blob/master/LICENSE)
 
-Copyright (c) 2023 [tycrek](https://github.com/tycrek)
+Copyright (c) 2023-2024 [tycrek](https://github.com/tycrek)

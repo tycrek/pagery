@@ -1,23 +1,23 @@
 #!/usr/bin/env node
 
-import Path from 'path';
+import Path from 'node:path';
+import { createRequire } from 'node:module';
+
 import postcss from 'postcss';
 import pug from 'pug';
 import fs from 'fs-extra';
-import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
-import { Logger } from './logger.js';
-import { Options, ConfigFile } from './Options.js';
-import { PageryError } from './PageryError.js';
+
+import { Log } from './Log.ts';
+import type { Options, ConfigFile } from './Options.ts';
+import { PageryError } from './PageryError.ts';
 
 // ! Legacy normalizations
-const path = (...args: string[]) => Path.join(process.cwd(), ...args);
-const dirname = () => Path.dirname(fileURLToPath(import.meta.url));
-const require = createRequire(import.meta.url);
+const path = (...args: string[]) => Path.join(Deno.cwd(), ...args);
+const require = createRequire(Deno.mainModule);
 // ! //
 
-const pkg: { name: string, version: string, homepage: string } = fs.readJsonSync(Path.join(dirname(), '../package.json'));
-const log = new Logger(`${pkg.name} v${pkg.version} |`);
+import pkg from '../deno.json' with { type: 'json' };
+const log = new Log(`${pkg.name.split('/')[1]} v${pkg.version} |`);
 
 const DEFAULT_OPTIONS: Options = {
 	views: 'views/',
@@ -31,7 +31,8 @@ const DEFAULT_OPTIONS: Options = {
 /**
  * Generic error printer
  */
-const errorPrint = (err: any) => (console.log(err), log.error(err), process.exit(1));
+// deno-lint-ignore no-explicit-any
+const errorPrint = (err: any) => (console.log(err), log.error(err), Deno.exit(1));
 
 /**
  * Fixes slashes in strings
@@ -51,7 +52,7 @@ const arrayify = (input: string | string[]) => (typeof input === 'string') ? [in
 /**
  * Promise-focused file existance checker
  */
-const doesFileExist = (file: string) => fs.pathExists(file).then((exists) => exists ? Promise.resolve()
+const doesFileExist = (file: string) => fs.pathExists(file).then((exists: boolean) => exists ? Promise.resolve()
 	: Promise.reject(new PageryError(`File not found: ${file}`, 'Create this file or remove it from the configuration.')));
 
 /**
@@ -63,7 +64,7 @@ const writeCssFile = (out: string, fn: string, c: string) => fs.writeFile(`${out
  * Quick function to change directory & log it
  */
 const chdir = (dir: string) => {
-	process.chdir(dir);
+	Deno.chdir(dir);
 	log.debug(`Changed directory to ${dir}`);
 };
 
@@ -99,6 +100,11 @@ const readConfigFile = (file: string): Promise<Options> => new Promise(async (re
 	return resolve(options);
 });
 
+// todo: fix this
+import * as tailwindcss from 'tailwindcss';
+import * as autoprefixer from 'autoprefixer';
+import * as cssnano from 'cssnano';
+import fontMagic from 'postcss-font-magician';
 /**
  * Compile CSS
  */
@@ -106,21 +112,22 @@ const css = (options: Options): Promise<{ [key: string]: string }> => new Promis
 
 	// Load PostCSS plugins
 	const plugins = [
-		require('tailwindcss')({ config: options.tailwindConfigFile }),
-		require('autoprefixer')(),
-		require('cssnano')(),
-		require('@tinycreek/postcss-font-magician')({ protocol: 'https:' })
+		tailwindcss.default({ config: options.tailwindConfigFile }),
+		autoprefixer.default(),
+		cssnano.default(),
+		fontMagic({ protocol: 'https:' })
 	];
 
 	// Load user-defined PostCSS plugins
 	if (typeof options.postcssPlugins !== 'string')
+		// todo: make this not use require somehow? dynamic import() maybe
 		options.postcssPlugins.forEach((plugin) => plugins.push(require(plugin)())); // todo: eventually somehow support plugin options
 
 	// Compile the CSS file with PostCSS
 	const compileCss = (filepath: string) =>
 		fs.readFile(filepath)
-			.then((bytes) => postcss(plugins).process(bytes, { from: filepath, to: filepath }))
-			.then((result) => {
+			.then((bytes: string) => postcss(plugins).process(bytes, { from: filepath, to: filepath }))
+			.then((result: { warnings?: any, css: string }) => {
 				if (result.warnings && result.warnings().length) throw new Error(result.warnings().join(', '));
 				return result.css;
 			});
@@ -128,13 +135,13 @@ const css = (options: Options): Promise<{ [key: string]: string }> => new Promis
 	// If array, we'll save to a map so the CSS can be accessed by filename
 	const css: { [key: string]: string } = {};
 	return Array.isArray(options.tailwindFile)
-		? Promise.all([...options.tailwindFile.map((file) => compileCss(path(file)).then((data) => css[file.match(/^(.*)(?=\.)/g)![0]] = data))])
+		? Promise.all([...options.tailwindFile.map((file) => compileCss(path(file)).then((data: string) => css[file.match(/^(.*)(?=\.)/g)![0]] = data))])
 			.then(() => resolve(css))
 			.catch(reject)
 
 		// Otherwise, just compile the one file
 		: compileCss(path(options.tailwindFile))
-			.then((data) => resolve({ pagery: data }))
+			.then((data: string) => resolve({ pagery: data }))
 			.catch(reject);
 });
 
@@ -174,7 +181,7 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 			const asJs = 'tailwind.config.js', asTs = 'tailwind.config.ts';
 
 			// First check (default or user provided)
-			doesFileExist(tcf).then(resolve).catch((err) => {
+			doesFileExist(tcf).then(resolve).catch((err: any) => {
 
 				// If set by user, fail
 				if (tcf !== asJs && tcf !== asTs) reject(err);
@@ -190,7 +197,7 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 		});
 
 		// Check: views directory (ensure at least one .pug file exists)
-		if (!(await fs.readdir(options.views)).some((file) => file.endsWith('.pug')))
+		if (!(await fs.readdir(options.views)).some((file: any) => file.endsWith('.pug')))
 			return reject(new PageryError(`No .pug files found in ${options.views}`, 'Create at least one .pug file in this directory.'));
 
 		// Check: output directory (create if it doesn't exist)
@@ -213,7 +220,7 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 				return !filename
 					? resolve(void 0)
 					: fs.readJson(file)
-						.then((json) => userData[filename] = json)
+						.then((json: any) => userData[filename] = json)
 						.then(resolve)
 						.catch(reject);
 			})));
@@ -266,13 +273,13 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 		// Recursively gets all Pug files in the provided directory (and subdirectories)
 		const pugTree = (root: string, sub = false): Promise<string[]> => new Promise((resolve, reject) =>
 			fs.readdir(root, { withFileTypes: true })
-				.then(async (files) => {
+				.then(async (files: any[]) => {
 
 					// Set up iterator
 					const pugFiles: string[] = [];
 					for (let file of files
-						.filter((file) => !options.exclude?.includes(file.name))
-						.filter((file) => (options.only?.length ?? 0) > 0 ? options.only?.includes(file.name) : true))
+						.filter((file: any) => !options.exclude?.includes(file.name))
+						.filter((file: any) => (options.only?.length ?? 0) > 0 ? options.only?.includes(file.name) : true))
 
 						// Directories should be recursively checked
 						if (file.isDirectory())
@@ -309,7 +316,7 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 		const render = (file: string, pugFile: string, htmlFile: string, data = userData) =>
 			fs.ensureFile(htmlFile)
 				.then(() => pug.renderFile(pugFile, { css: _css, data }))
-				.then((html) => {
+				.then((html: string) => {
 					// ! TypeScript complains if this is ternary so leave as-is
 					if (module) pugData[file] = html;
 					else return fs.writeFile(htmlFile, html);
@@ -342,23 +349,23 @@ const generateAll = (options: Options, module = false): Promise<void | { pug: { 
 });
 
 // * Check if being run on the command line
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.main) {
 
 	/*
 	 * Parse command line arguments
 	 *
 	 * --config=config.json
-	 * --views=views/               # Pug main file
-	 * --output=html/               # Output directory
+	 * --views=views/			   # Pug main file
+	 * --output=html/			   # Output directory
 	 * --tailwindFile=tailwind.css  # Tailwind CSS file
 	 * --tailwindConfigFile=tailwind.config.js  # Tailwind config file
-	 * --outputCss=true             # Saves compiled CSS to file
-	 * --dir=./                     # Run in this directory
-	 * --data=data.json             # Data file(s) to pass to Pug
-	 * --exclude=views/_head.pug    # File(s) to exclude from rendering
-	 * --only=views/spec.pug        # File(s) to explicity render (nothing else)
+	 * --outputCss=true			 # Saves compiled CSS to file
+	 * --dir=./					 # Run in this directory
+	 * --data=data.json			 # Data file(s) to pass to Pug
+	 * --exclude=views/_head.pug	# File(s) to exclude from rendering
+	 * --only=views/spec.pug		# File(s) to explicity render (nothing else)
 	 */
-	const args = process.argv.slice(2).reduce((acc, arg) => {
+	const args = Deno.args.slice(2).reduce((acc, arg) => { // todo: switch to @std/parse-args
 		const [key, value] = arg.split('=');
 		acc[key.replaceAll('--', '')] = value;
 		return acc;
@@ -413,7 +420,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 /**
  * Generate as a module
  */
-export const generate = (options: Options, logging = false) => {
+export const generate = (options: Options, logging = false): Promise<void | {
+	pug: { [key: string]: string; };
+	css: string | { [key: string]: string; };
+}> => {
 
 	// Logging?
 	log.setEnabled(logging);

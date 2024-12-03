@@ -28,17 +28,22 @@ export interface Options {
 
 	// Only render these specific files. Can be a string or an array of strings.
 	only?: string | string[];
+
+	config?: string;
 }
 
-export interface ConfigFile {
-	views?: string;
-	output?: string;
-	outputCss?: boolean;
-	tailwindFile?: string | string[];
-	tailwindConfigFile?: string;
-	postcssPlugins?: string | string[];
-	dir?: string;
-	data?: string | string[];
-	exclude?: string | string[];
-	only?: string | string[];
-}
+export const DEFAULT_OPTIONS: Options = {
+	views: 'views/',
+	output: 'html/',
+	tailwindFile: 'tailwind.css',
+	tailwindConfigFile: 'tailwind.config.ts',
+	outputCss: true,
+	postcssPlugins: [],
+};
+
+const defaultsAsRecord: Record<string, string | number> = Object.entries(DEFAULT_OPTIONS)
+	.reduce((acc, [key, value]) => {
+		acc[key] = value;
+		return acc;
+	}, {} as Record<string, string | number>);
+export const DEFAULT_OPTIONS_RECORD = defaultsAsRecord;
