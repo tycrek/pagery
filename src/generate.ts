@@ -52,7 +52,7 @@ const generateCss = async (options: Options): Promise<{ [key: string]: string }>
 		// Check warnings
 		let warned = false;
 		for (const warn of results.warnings()) {
-			log.warn(warn.toString());
+			log.warn(`[PostCSS] ${warn.toString()}`);
 			warned = true;
 		}
 		if (warned) await new Promise((r) => setTimeout(r, 3E3));
@@ -72,11 +72,13 @@ const generateCss = async (options: Options): Promise<{ [key: string]: string }>
 	return Promise.resolve(css);
 };
 
+const generatePug = async (options: Options): Promise<void> => {
+};
+
 export const generate = async (options: Options, module = false): Promise<void> => {
-	const pugData: { [key: string]: string } = {};
-
-	// * 1/4: Files check
-
+	/*
+	 * 1/4: Files check
+	 */
 	// Check: output directory
 	await ensureDir(options.output);
 
@@ -88,7 +90,7 @@ export const generate = async (options: Options, module = false): Promise<void> 
 				throw Errors.FileNotFound(file);
 			}
 		}
-	} else log.debug('No data files specified');
+	} else log.debug('[DATA] No files specified');
 
 	// Check: Tailwind.css
 	options.tailwindFile = arrayify(options.tailwindFile);
@@ -118,11 +120,10 @@ export const generate = async (options: Options, module = false): Promise<void> 
 		}
 	}
 
-	// * 2/4: Load data files
-
-	// deno-lint-ignore no-explicit-any
-	const userData: any = {};
-
+	/*
+	 * 2/4: Load data files
+	 */
+	const userData: { [key: string]: JSON } = {};
 	if (options.data && Array.isArray(options.data)) {
 		for (const file of options.data) {
 			const filename = file.split('/').pop()!.split('.').shift()!;
@@ -131,8 +132,9 @@ export const generate = async (options: Options, module = false): Promise<void> 
 		}
 	}
 
-	// * 3/4: Compile CSS
-
+	/*
+	 * 3/4: Compile CSS
+	 */
 	const cssData = await generateCss(options);
 	if (options.outputCss) {
 		await ensureDir(`${options.output}/css/`);
@@ -141,7 +143,10 @@ export const generate = async (options: Options, module = false): Promise<void> 
 		}
 	}
 
-	// * 4/4: Render Pug
+	/*
+	 * 4/4: Render Pug
+	 */
+	const pugData: { [key: string]: string } = {};
 
 	return Promise.resolve(void 0);
 };
