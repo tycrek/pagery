@@ -56,15 +56,25 @@ if (import.meta.main) {
 /**
  * Default generator: produces both Pug and CSS.
  */
-export default (options: Options) => generate(processArgs(options));
+export default (options: Options): Promise<{
+	pug: { [key: string]: string };
+	css: { [key: string]: string };
+}> => generate(processArgs(options));
 
 /**
  * CSS generator
  */
-export const generateCss = (options: Options) => genCss(processArgs(options));
+export const generateCss = (options: Options): Promise<
+	{ [key: string]: string }
+> => genCss(processArgs(options));
 
 /**
  * Pug generator
  */
-export const generatePug = (options: Options, userData: { [key: string]: JSON }, cssData: { [key: string]: string }) =>
-	genPug(processArgs(options), userData, cssData);
+export const generatePug = (
+	options: Options,
+	userData: { [key: string]: JSON },
+	cssData: { [key: string]: string },
+): Promise<
+	{ [key: string]: string }
+> => genPug(processArgs(options), userData, cssData);
