@@ -166,7 +166,10 @@ const generatePug = async (
 	return Promise.resolve(pugData);
 };
 
-export const generate = async (options: Options, module = false): Promise<void> => {
+export const generate = async (options: Options, module = false): Promise<{
+	pug: { [key: string]: string };
+	css: { [key: string]: string };
+}> => {
 	/*
 	 * 1/4: Files check
 	 */
@@ -226,7 +229,7 @@ export const generate = async (options: Options, module = false): Promise<void> 
 	 * 3/4: Compile CSS
 	 */
 	const cssData = await generateCss(options);
-	if (options.outputCss) {
+	if (!module && options.outputCss) {
 		await ensureDir(`${options.output}/css/`);
 		for (const [filename, contents] of Object.entries(cssData)) {
 			await Deno.writeTextFile(`${options.output}/css/${filename}.css`, contents as string);
@@ -237,11 +240,16 @@ export const generate = async (options: Options, module = false): Promise<void> 
 	 * 4/4: Render Pug
 	 */
 	const pugData = await generatePug(options, userData, cssData);
-	for (const [filename, contents] of Object.entries(pugData)) {
-		const htmlFile = `${options.output}${filename}.html`;
-		await ensureFile(htmlFile);
-		await Deno.writeTextFile(htmlFile, contents);
+	if (!module) {
+		for (const [filename, contents] of Object.entries(pugData)) {
+			const htmlFile = `${options.output}${filename}.html`;
+			await ensureFile(htmlFile);
+			await Deno.writeTextFile(htmlFile, contents);
+		}
 	}
 
-	return Promise.resolve(void 0);
+	return Promise.resolve({
+		pug: pugData,
+		css: cssData,
+	});
 };
