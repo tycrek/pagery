@@ -15,7 +15,7 @@ import { Errors } from './utils.ts';
 /**
  * CSS generator
  */
-const generateCss = async (options: Options): Promise<{ [key: string]: string }> => {
+export const generateCss = async (options: Options): Promise<{ [key: string]: string }> => {
 	// Load included plugins
 	const plugins = [
 		tailwindcss({ config: options.tailwindConfigFile }),
@@ -72,7 +72,10 @@ const generateCss = async (options: Options): Promise<{ [key: string]: string }>
 	return Promise.resolve(css);
 };
 
-const generatePug = async (
+/**
+ * Pug generator
+ */
+export const generatePug = async (
 	options: Options,
 	userData: { [key: string]: JSON },
 	cssData: { [key: string]: string },
@@ -100,10 +103,8 @@ const generatePug = async (
 
 						// Get nested property data from a key such as [file,one,two]
 						let d = userData[split[0]];
-						for (const p of prop) {
-							// @ts-ignore:7053
-							d = d[p.replaceAll(/[\[\]]/g, '')];
-						}
+						// @ts-ignore:7053
+						for (const p of prop) d = d[p.replaceAll(/[\[\]]/g, '')];
 						return d;
 					})()
 					: userData[iterationName], // If no property keys, just the data key
@@ -128,11 +129,11 @@ const generatePug = async (
 			// Directories should be recursively checked
 			if (file.isDirectory) {
 				pugFiles.push(...(await dogWalk(`${root}/${file.name}`, true)));
-			} // Otherwise get a list of Pug files
-			else if (isPug(file) && !file.name.includes('[')) {
+			} else if (isPug(file) && !file.name.includes('[')) {
+				// Otherwise get a list of Pug files
 				pugFiles.push(`${sub ? root.replace(options.views, '') : ''}/${file.name.replace('.pug', '')}`);
-			} // Or build an Iteration
-			else if (isPug(file) && file.name.includes('[') && file.name.includes(']')) {
+			} else if (isPug(file) && file.name.includes('[') && file.name.includes(']')) {
+				// Or build an Iteration
 				Iterations.list.push(Iterations.build(file, root));
 			}
 		}
@@ -166,6 +167,9 @@ const generatePug = async (
 	return Promise.resolve(pugData);
 };
 
+/**
+ * CSS & Pug generator
+ */
 export const generate = async (options: Options, module = false): Promise<{
 	pug: { [key: string]: string };
 	css: { [key: string]: string };
@@ -173,46 +177,32 @@ export const generate = async (options: Options, module = false): Promise<{
 	/*
 	 * 1/4: Files check
 	 */
-	// Check: output directory
-	await ensureDir(options.output);
-
 	// Check: user data
 	if (options.data != null) {
 		options.data = arrayify(options.data);
 		for (const file of options.data) {
-			if (!await exists(file)) {
-				throw Errors.FileNotFound(file);
-			}
+			if (!await exists(file)) throw Errors.FileNotFound(file);
 		}
 	} else log.debug('[DATA] No files specified');
 
 	// Check: Tailwind.css
 	options.tailwindFile = arrayify(options.tailwindFile);
 	for (const file of options.tailwindFile) {
-		if (!await exists(file)) {
-			throw Errors.FileNotFound(file);
-		}
+		if (!await exists(file)) throw Errors.FileNotFound(file);
 	}
 
 	// Check: Tailwind.config.ts
-	if (!await exists(options.tailwindConfigFile)) {
-		throw Errors.FileNotFound(options.tailwindConfigFile);
-	}
+	if (!await exists(options.tailwindConfigFile)) throw Errors.FileNotFound(options.tailwindConfigFile);
 
 	// Check: views/ directory (at least one .pug file)
 	let checkHasPug = false;
-	{
-		for await (const entry of Deno.readDir(options.views)) {
-			if (entry.isFile && entry.name.endsWith('.pug')) {
-				checkHasPug = true;
-				break;
-			}
-		}
-
-		if (!checkHasPug) {
-			throw Errors.NoPugFiles(options.views);
+	for await (const entry of Deno.readDir(options.views)) {
+		if (entry.isFile && entry.name.endsWith('.pug')) {
+			checkHasPug = true;
+			break;
 		}
 	}
+	if (!checkHasPug) throw Errors.NoPugFiles(options.views);
 
 	/*
 	 * 2/4: Load data files
@@ -226,25 +216,33 @@ export const generate = async (options: Options, module = false): Promise<{
 	}
 
 	/*
-	 * 3/4: Compile CSS
+	 * 3/4: Compile Pug & CSS
 	 */
 	const cssData = await generateCss(options);
-	if (!module && options.outputCss) {
-		await ensureDir(`${options.output}/css/`);
-		for (const [filename, contents] of Object.entries(cssData)) {
-			await Deno.writeTextFile(`${options.output}/css/${filename}.css`, contents as string);
-		}
-	}
+	const pugData = await generatePug(options, userData, cssData);
 
 	/*
-	 * 4/4: Render Pug
+	 * 4/4: Write files
 	 */
-	const pugData = await generatePug(options, userData, cssData);
 	if (!module) {
+		// Create output directory
+		await ensureDir(options.output);
+
+		// Write HTML
 		for (const [filename, contents] of Object.entries(pugData)) {
-			const htmlFile = `${options.output}${filename}.html`;
+			const htmlFile = `${options.output}/${filename}.html`;
 			await ensureFile(htmlFile);
 			await Deno.writeTextFile(htmlFile, contents);
+		}
+
+		// Write CSS
+		if (options.outputCss) {
+			await ensureDir(`${options.output}/css/`);
+			for (const [filename, contents] of Object.entries(cssData)) {
+				const cssFile = `${options.output}/css/${filename}.css`;
+				await ensureFile(cssFile);
+				await Deno.writeTextFile(cssFile, contents as string);
+			}
 		}
 	}
 
