@@ -57,7 +57,7 @@ export const generateCss = async (options: Options): Promise<{ [key: string]: st
 		}
 		if (warned) await new Promise((r) => setTimeout(r, 3E3));
 
-		return results.toString();
+		return Promise.resolve(results.toString());
 	};
 
 	// Compile all CSS files
@@ -147,22 +147,20 @@ export const generatePug = async (
 	const pugData: { [key: string]: string } = {};
 	const render = async (file: string, pugFile: string, data = userData) => {
 		pugData[file] = await pug.renderFile(pugFile, { css: cssData, data });
-		log.info(`[PUG] ${file}`);
+		return Promise.resolve(log.info(`[PUG] ${file}`));
 	};
 
 	// Process regular Pug files
-	await Promise.all(files.map((file) => render(file, `${options.views}${file}.pug`)));
+	for (const file of files) await render(file, `${options.views}${file}.pug`);
 
 	// Process Iterations
-	const iterations: Promise<void>[] = [];
+	// todo: merge userData with entry (data)
 	for (const iter of Iterations.list) {
-		Object.entries(iter.iterData).forEach(([key, entry]) => {
+		for (const [key, entry] of Object.entries(iter.iterData)) {
 			const file = `${iter.source.replace(options.views, '').replace(/\[(.*)\]\.pug/, key)}`;
-			// todo: merge userData with entry (data)
-			iterations.push(render(file, iter.source, entry));
-		});
+			await render(file, iter.source, entry);
+		}
 	}
-	await Promise.all(iterations);
 
 	return Promise.resolve(pugData);
 };
