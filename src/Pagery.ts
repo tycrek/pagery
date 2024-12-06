@@ -55,6 +55,8 @@ if (import.meta.main) {
 
 /**
  * Default generator: produces both Pug and CSS.
+ * @param options - Pagery options
+ * @returns Promise resolving compiled Pug and CSS
  */
 export default (options: Options): Promise<{
 	pug: { [key: string]: string };
@@ -63,6 +65,8 @@ export default (options: Options): Promise<{
 
 /**
  * CSS generator
+ * @param options - Pagery options
+ * @returns Promise resolving compiled CSS
  */
 export const generateCss = (options: Options): Promise<
 	{ [key: string]: string }
@@ -70,6 +74,10 @@ export const generateCss = (options: Options): Promise<
 
 /**
  * Pug generator
+ * @param options - Pagery options
+ * @param userData - JSON data to pass to Pug renderer
+ * @param cssData - CSS data to pass to Pug renderer
+ * @returns Promise resolving compilged Pug
  */
 export const generatePug = (
 	options: Options,
