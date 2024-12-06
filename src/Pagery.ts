@@ -86,3 +86,5 @@ export const generatePug = (
 ): Promise<
 	{ [key: string]: string }
 > => genPug(processArgs(options), userData, cssData);
+
+export type { Options };
