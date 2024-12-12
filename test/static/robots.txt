@@ -1,0 +1,15 @@
+# Allow all web crawlers access to the entire site
+User-agent: *
+Disallow:
+
+# Block a specific web crawler (e.g., Googlebot) from accessing a specific directory
+User-agent: Googlebot
+Disallow: /private/
+
+# Block all web crawlers from accessing a specific file
+User-agent: *
+Disallow: /noindex.html
+
+# Allow a specific web crawler (e.g., Bingbot) to access everything
+User-agent: Bingbot
+Disallow:
