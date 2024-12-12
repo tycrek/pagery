@@ -29,6 +29,8 @@ export interface Options {
 	// Only render these specific files. Can be a string or an array of strings.
 	only?: string | string[];
 
+	static?: string;
+
 	config?: string;
 }
 

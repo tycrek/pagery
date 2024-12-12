@@ -1,4 +1,4 @@
-import { ensureDir, ensureFile, exists } from '@std/fs';
+import { ensureDir, ensureFile, exists, walk } from '@std/fs';
 
 import pug from 'pug';
 import postcss from 'postcss';
@@ -240,6 +240,16 @@ export const generate = async (options: Options, module = false): Promise<{
 				const cssFile = `${options.output}/css/${filename}.css`;
 				await ensureFile(cssFile);
 				await Deno.writeTextFile(cssFile, contents as string);
+			}
+		}
+
+		// Copy static files
+		if (options.static) {
+			for await (const entry of walk(options.static, { includeDirs: false })) {
+				const staticFile = `${options.output}/${entry.path.replace(options.static, '')}`;
+				await ensureFile(staticFile);
+				await Deno.copyFile(entry.path, staticFile);
+				log.info(`[STATIC] ${entry.path}`);
 			}
 		}
 	}
