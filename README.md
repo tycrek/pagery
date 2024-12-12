@@ -136,6 +136,12 @@ button.bg-red_500.text-white.hover_bg-red-700(onclick='alert("Hello world!")') C
 
 See [Tailwind docs for Separator](https://tailwindcss.com/docs/configuration#separator) for more information.
 
+For type completion in this file, make sure you have Tailwind installed:
+
+```bash
+deno install npm:tailwindcss
+```
+
 Some Tailwind classes use `/` for fractional values. This is also a problem in Pug, so it's recommended to do the following:
 
 ```pug
@@ -198,9 +204,12 @@ This will compile your Pug files into HTML in the `html/` directory.
 | `data` | Path to JSON file(s) containing data to pass to Pug files | `null` |
 | `exclude` | Comma-separated list of Pug files or directories to exclude from the output | `null` |
 | `only` | Comma-separated list of Pug files to explicity render | `null` |
+| `static` | Directory to recursively copy static files from | `null` |
 | `` |
 
-All options can be set on the command line (for example, `--output=static/`), in a JSON config file (must be referenced using `--config=file.json`), or when used as a module.
+All options can be set on the command line (for example, `--output=website/`), in a JSON config file (must be referenced using `--config=file.json`), or when used as a module.
+
+See [JSR docs](https://jsr.io/@tycrek/pagery/doc/~/Options) for more information.
 
 **Example:**
 
