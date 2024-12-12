@@ -147,7 +147,7 @@ export const generatePug = async (
 	const pugData: { [key: string]: string } = {};
 	const render = async (file: string, pugFile: string, data = userData) => {
 		pugData[file] = await pug.renderFile(pugFile, { css: cssData, data });
-		return Promise.resolve(log.info(`[PUG] ${file}`));
+		return Promise.resolve(log.info(`[HTML] ${file.replace('/', '')}`));
 	};
 
 	// Process regular Pug files
