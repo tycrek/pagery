@@ -131,7 +131,7 @@ export default {
 ```
 
 ```pug
-button.bg-red_500.text-white.hover_bg-red-700(onclick='alert("Hello world!")') Click me!
+button.bg-red-500.text-white.hover_bg-red-700(onclick='alert("Hello world!")') Click me!
 ```
 
 See [Tailwind docs for Separator](https://tailwindcss.com/docs/configuration#separator) for more information.
@@ -205,7 +205,6 @@ This will compile your Pug files into HTML in the `html/` directory.
 | `exclude` | Comma-separated list of Pug files or directories to exclude from the output | `null` |
 | `only` | Comma-separated list of Pug files to explicity render | `null` |
 | `static` | Directory to recursively copy static files from | `null` |
-| `` |
 
 All options can be set on the command line (for example, `--output=website/`), in a JSON config file (must be referenced using `--config=file.json`), or when used as a module.
 
