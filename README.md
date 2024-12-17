@@ -247,20 +247,17 @@ You can also import pagery as a module and use it in your own scripts for dynami
 ```ts
 import pagery from 'pagery';
 
-/* this is out of date and will be updated soon */
+const pagery = new Pagery({
+   views: 'pug/',
+   output: 'public/',
+   dir: 'website/',
+   data: 'language.json',
+   tailwindFile: 'css/main.css,css/admin.css'
+});
 
-//generate({
-//    views: 'pug/',
-//    output: 'public/',
-//    dir: 'website/',
-//    data: 'language.json',
-//    tailwindFile: 'css/main.css,css/admin.css'
-//})
-//    .then((data) => {
-//        console.log(`HTML files: ${Object.keys(data.pug).length}`);
-//        console.log(`CSS files: ${data.css instanceof Array ? data.css.length : 1}`);
-//    })
-//    .catch((err) => console.error(err));
+const results = await pagery.generate();
+console.log(`HTML files: ${Object.keys(results.pug).length}`);
+console.log(`CSS files: ${Object.keys(results.css).length}`);
 ```
 
 #### Iteration Generation
