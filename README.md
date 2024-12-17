@@ -240,7 +240,7 @@ This would be the same as running:
 pagery --views=pug/ --output=public/ --dir=website/ --data=language.json --tailwindFile=css/main.css,css/admin.css
 ```
 
-#### Importing as a module (*out-of-date*)
+#### Importing as a module
 
 You can also import pagery as a module and use it in your own scripts for dynamic server-side rendering. For example:
 
